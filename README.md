@@ -51,7 +51,10 @@
 위의 기능들을 Ver.1로 구현할 예정입니다.
 
 ## ✈️ ERD
-<img width="100%" src="https://github.com/ESJung95/TravelMate/assets/155522048/13010969-6702-4114-8c7b-e7bd1506271c"/>
+<img width="100%" src="doc/image/ERD.png" alt="ERD">
+
+## Trouble Shooting
+[go to the trouble shooting section](doc/TROUBLE_SHOOTING.md)
 
 ## ✈️ Tech Stack
 <div align=center> 
@@ -80,13 +83,13 @@
 
 ## ✈️ Flow
 ### 1. 회원 관리 플로우
-<img width="80%" src="https://github.com/ESJung95/TravelMate/assets/155522048/dd82ccce-7173-436b-b726-39e3a950daeb"/>
+<img width="80%" src="doc/image/User.png" alt="userFlow">
 
 ### 2. 여행 정보 조회 플로우
-<img width="60%" src="https://github.com/ESJung95/TravelMate/assets/155522048/bb2515c8-a1b1-4b26-a40d-59480804438f"/>
+<img width="60%" src="doc/image/TourInfo.png" alt="tourInfoFlow">
 
 ### 3. 일정표 플로우
-<img width="80%" src="https://github.com/ESJung95/TravelMate/assets/155522048/cee23900-bdda-45af-a483-8a76f2a0d3a7"/>
+<img width="80%" src="doc/image/Plan.png" alt="planFlow">
 
 ## ✈️ 소프트웨어 아키텍처 다이어그램 (추가 예정)
 
