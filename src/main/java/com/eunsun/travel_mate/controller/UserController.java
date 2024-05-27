@@ -32,7 +32,7 @@ public class UserController {
   public ResponseEntity<?> checkEmailAndSendCode(
       @RequestBody SignupDto signupDto,
       HttpServletRequest request) {
-    log.info("[" + signupDto.getEmail() + "] 사용자의 이메일 중복 확인 & 인증 코드 전송 요청");
+    log.info("[{}] 사용자의 이메일 중복 확인 & 인증 코드 전송 요청", signupDto.getEmail());
 
     // 이메일 중복 확인
     if (userService.isEmailDuplicated(signupDto.getEmail())) {
@@ -70,8 +70,7 @@ public class UserController {
   public ResponseEntity<?> signup(
       @RequestBody SignupDto signupDto,
       HttpServletRequest request) {
-
-    log.info("[" + signupDto.getEmail() + "] 사용자의 회원가입 요청");
+    log.info("[{}] 사용자의 회원가입 요청", signupDto.getEmail());
 
     // 이메일 인증 여부 확인
     Boolean isEmailVerified = (Boolean) request.getSession().getAttribute("isEmailVerified");
