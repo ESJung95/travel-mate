@@ -61,8 +61,7 @@ public class UserService {
       SignupDto signupDto,
       HttpServletRequest request) {
 
-    Boolean isEmailVerified = (Boolean) request.getSession().getAttribute("isEmailVerified");
-    if (isEmailVerified == null || !isEmailVerified) {
+    if (!SessionUtil.isEmailVerified(request)) {
       throw new IllegalStateException("이메일 인증을 안함");
     }
 
