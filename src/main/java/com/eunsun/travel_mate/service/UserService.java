@@ -68,12 +68,7 @@ public class UserService {
     // 비밀번호 암호화
     String encodedPassword = passwordEncoder.encode(signupDto.getPassword());
 
-    User user = User.builder()
-          .email(signupDto.getEmail())
-          .password(encodedPassword)
-          .name(signupDto.getName())
-          .birthdate(signupDto.getBirthdate())
-          .build();
+    User user = SignupDto.toEntity(signupDto, encodedPassword);
 
     log.info("회원 가입 정보 저장 성공");
     return userRepository.save(user);
