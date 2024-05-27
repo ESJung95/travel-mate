@@ -6,6 +6,7 @@ import com.eunsun.travel_mate.repository.UserRepository;
 import com.eunsun.travel_mate.util.RandomUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Service;
 public class UserService {
 
   private final UserRepository userRepository;
+  private final PasswordEncoder passwordEncoder;
 
   // 이메일 중복 확인
   public boolean isEmailDuplicated(String email) {
@@ -25,15 +27,15 @@ public class UserService {
     return RandomUtil.generateRandomCode();
   }
 
-  // Todo 비밀번호 암호화
-  String encodedPassword;
-
   // 회원 정보 저장
   public User createUser(SignupDto signupDto) {
 
+    // 비밀번호 암호화
+    String encodedPassword = passwordEncoder.encode(signupDto.getPassword());
+
     User user = User.builder()
           .email(signupDto.getEmail())
-          .password(signupDto.getPassword())
+          .password(encodedPassword)
           .name(signupDto.getName())
           .birthdate(signupDto.getBirthdate())
           .build();
