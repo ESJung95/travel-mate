@@ -1,4 +1,4 @@
-package com.eunsun.travel_mate.util;
+package com.eunsun.travel_mate.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.mail.SimpleMailMessage;
@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
-public class EmailUtil {
+public class MailService {
 
   private final JavaMailSender mailSender;
 

@@ -3,8 +3,8 @@ package com.eunsun.travel_mate.controller;
 import com.eunsun.travel_mate.domain.User;
 import com.eunsun.travel_mate.dto.EmailVerificationDto;
 import com.eunsun.travel_mate.dto.SignupDto;
+import com.eunsun.travel_mate.service.MailService;
 import com.eunsun.travel_mate.service.UserService;
-import com.eunsun.travel_mate.util.EmailUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,7 +25,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class UserController {
 
   private final UserService userService;
-  private final EmailUtil emailUtil;
+  private final MailService mailService;
 
   // 이메일 중복 확인 & 메일로 인증 코드 전송
   @PostMapping("/check-email")
@@ -34,17 +34,14 @@ public class UserController {
       HttpServletRequest request) {
     log.info("[{}] 사용자의 이메일 중복 확인 & 인증 코드 전송 요청", signupDto.getEmail());
 
-    // 이메일 중복 확인
-    if (userService.isEmailDuplicated(signupDto.getEmail())) {
-      return ResponseEntity.badRequest().body("사용 중인 이메일");
+    try {
+      userService.checkEmailAndSendCode(signupDto.getEmail(), request);
+      return ResponseEntity.ok("이메일로 인증 코드 전송!");
+
+    } catch (IllegalArgumentException e) {
+
+      return ResponseEntity.badRequest().body(e.getMessage());
     }
-
-    // 본인 확인 인증 코드 생성 & 코드 전송
-    String verificationCode = userService.generateVerificationCode();
-    emailUtil.sendVerificationEmail(signupDto.getEmail(), verificationCode);
-
-    request.getSession().setAttribute("verificationCode", verificationCode);
-    return ResponseEntity.ok("이메일로 인증 코드 전송!");
   }
 
   // 이메일 인증 코드 확인
@@ -53,12 +50,7 @@ public class UserController {
       @RequestBody EmailVerificationDto emailVerificationDto,
       HttpServletRequest request) {
 
-    String storedVerificationCode = (String) request.getSession().getAttribute("verificationCode");
-
-    if (storedVerificationCode != null && storedVerificationCode.equals(emailVerificationDto.getVerificationCode())) {
-      request.getSession().setAttribute("isEmailVerified", true);
-      request.getSession().setMaxInactiveInterval(30 * 60);
-
+    if (userService.verifyEmailCode(emailVerificationDto.getVerificationCode(), request)) {
       return ResponseEntity.ok("이메일 인증 성공");
     } else {
       return ResponseEntity.badRequest().body("유효하지 않은 인증 코드");
@@ -72,15 +64,9 @@ public class UserController {
       HttpServletRequest request) {
     log.info("[{}] 사용자의 회원가입 요청", signupDto.getEmail());
 
-    // 이메일 인증 여부 확인
-    Boolean isEmailVerified = (Boolean) request.getSession().getAttribute("isEmailVerified");
-    if (isEmailVerified == null || !isEmailVerified) {
-      return ResponseEntity.badRequest().body("이메일이 인증을 하지 않았음");
-    }
-
     try {
       // 회원 정보 저장
-      User createdUser = userService.createUser(signupDto);
+      User createdUser = userService.createUser(signupDto, request);
 
       request.getSession().invalidate(); // 세션 정보 초기화
       return ResponseEntity.ok(createdUser);
