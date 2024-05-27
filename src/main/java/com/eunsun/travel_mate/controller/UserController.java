@@ -3,7 +3,6 @@ package com.eunsun.travel_mate.controller;
 import com.eunsun.travel_mate.domain.User;
 import com.eunsun.travel_mate.dto.EmailVerificationDto;
 import com.eunsun.travel_mate.dto.SignupDto;
-import com.eunsun.travel_mate.service.MailService;
 import com.eunsun.travel_mate.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -25,7 +24,6 @@ import org.springframework.web.bind.annotation.RestController;
 public class UserController {
 
   private final UserService userService;
-  private final MailService mailService;
 
   // 이메일 중복 확인 & 메일로 인증 코드 전송
   @PostMapping("/check-email")
