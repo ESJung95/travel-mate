@@ -3,7 +3,6 @@ package com.eunsun.travel_mate.service;
 import com.eunsun.travel_mate.domain.User;
 import com.eunsun.travel_mate.dto.SignupDto;
 import com.eunsun.travel_mate.repository.UserRepository;
-import com.eunsun.travel_mate.util.EmailUtil;
 import com.eunsun.travel_mate.util.RandomUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,7 +14,6 @@ import org.springframework.stereotype.Service;
 public class UserService {
 
   private final UserRepository userRepository;
-  private final EmailUtil emailUtil;
 
   // 이메일 중복 확인
   public boolean isEmailDuplicated(String email) {
@@ -24,9 +22,7 @@ public class UserService {
 
   // 인증 코드 생성
   public String generateVerificationCode() {
-
-    String verificationCode = RandomUtil.generateRandomCode();
-    return verificationCode;
+    return RandomUtil.generateRandomCode();
   }
 
   // Todo 비밀번호 암호화

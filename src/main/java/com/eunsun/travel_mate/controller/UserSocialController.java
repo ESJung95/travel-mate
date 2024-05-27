@@ -1,6 +1,5 @@
 package com.eunsun.travel_mate.controller;
 
-import com.eunsun.travel_mate.domain.UserSocial;
 import com.eunsun.travel_mate.service.UserSocialService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
