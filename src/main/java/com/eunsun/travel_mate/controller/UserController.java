@@ -5,10 +5,12 @@ import com.eunsun.travel_mate.dto.EmailVerificationDto;
 import com.eunsun.travel_mate.dto.SignupDto;
 import com.eunsun.travel_mate.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -58,9 +60,15 @@ public class UserController {
   // 회원 가입
   @PostMapping("/signup")
   public ResponseEntity<?> signup(
-      @RequestBody SignupDto signupDto,
+      @Valid @RequestBody SignupDto signupDto,
+      BindingResult result,
       HttpServletRequest request) {
     log.info("[{}] 사용자의 회원가입 요청", signupDto.getEmail());
+
+    // 유효성 검사 처리
+    if (result.hasErrors()) {
+      return ResponseEntity.badRequest().body(result.getAllErrors());
+    }
 
     try {
       // 회원 정보 저장
