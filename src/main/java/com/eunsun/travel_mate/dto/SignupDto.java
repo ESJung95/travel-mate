@@ -3,6 +3,7 @@ package com.eunsun.travel_mate.dto;
 import com.eunsun.travel_mate.domain.User;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Past;
 import jakarta.validation.constraints.Pattern;
 import java.time.LocalDate;
@@ -11,6 +12,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.format.annotation.DateTimeFormat;
 
 
 @Getter
@@ -32,10 +34,11 @@ public class SignupDto {
   @NotBlank(message = "이름은 필수 입력 값 입니다.")
   private String name;
 
-  @NotBlank(message = "생년월일은 필수 입력 값 입니다.")
+  @NotNull(message = "생년월일은 필수 입력 값 입니다.")
   @Past(message = "생년월일을 확인해주세요.")
-  @Pattern(regexp = "^\\d{4}-\\d{2}-\\d{2}$", message = "생년월일은 yyyy-MM-dd 형식으로 입력해주세요.")
+  @DateTimeFormat(pattern = "yyyy-MM-dd")
   private LocalDate birthdate;
+
   private String verificationCode;
 
 
