@@ -4,6 +4,7 @@ import com.eunsun.travel_mate.domain.User;
 import com.eunsun.travel_mate.dto.EmailVerificationDto;
 import com.eunsun.travel_mate.dto.SignupDto;
 import com.eunsun.travel_mate.service.UserService;
+import com.eunsun.travel_mate.util.SessionUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -32,12 +33,12 @@ public class UserController {
   public ResponseEntity<?> checkEmailDuplicated(@RequestBody SignupDto signupDto) {
     log.info("[{}] 사용자의 이메일 중복 확인 요청", signupDto.getEmail());
 
-    try {
-      userService.checkEmailDuplicated(signupDto.getEmail());
-      return ResponseEntity.ok("사용 가능한 이메일입니다.");
+    boolean isDuplicated = userService.checkEmailDuplicated(signupDto.getEmail());
 
-    } catch (IllegalArgumentException e) {
-      return ResponseEntity.badRequest().body(e.getMessage());
+    if (isDuplicated) {
+      return ResponseEntity.badRequest().body("이미 사용 중인 이메일입니다.");
+    } else {
+      return ResponseEntity.ok("사용 가능한 이메일입니다.");
     }
   }
 
@@ -48,8 +49,15 @@ public class UserController {
       HttpServletRequest request) {
     log.info("[{}] 사용자의 메일로 인증 코드 전송 요청", signupDto.getEmail());
 
-    userService.sendVerificationCode(signupDto.getEmail(), request);
-    return ResponseEntity.ok("이메일로 인증 코드 전송!");
+    String verificationCode = userService.generateVerificationCode();
+    boolean isSendEmail = userService.sendVerificationCode(signupDto.getEmail(), verificationCode);
+
+    if (isSendEmail) {
+      SessionUtil.setVerificationCode(request, verificationCode); // 세션에 저장
+      return ResponseEntity.ok("인증 코드 전송 완료");
+    } else {
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("인증 코드 전송 실패");
+    }
   }
 
 
@@ -59,10 +67,17 @@ public class UserController {
       @RequestBody EmailVerificationDto emailVerificationDto,
       HttpServletRequest request) {
 
-    if (userService.verifyEmailCode(emailVerificationDto.getVerificationCode(), request)) {
+    String inputVerificationCode = emailVerificationDto.getVerificationCode();
+    String storedVerificationCode = SessionUtil.getVerificationCode(request);
+
+    boolean isVerifyCode = userService.verifyEmailCode(inputVerificationCode, storedVerificationCode);
+
+    if (isVerifyCode) {
+      SessionUtil.setEmailVerified(request, true);
       return ResponseEntity.ok("이메일 인증 성공");
+
     } else {
-      return ResponseEntity.badRequest().body("유효하지 않은 인증 코드");
+      return ResponseEntity.badRequest().body("유효하지 않은 인증코드");
     }
   }
 
@@ -70,6 +85,7 @@ public class UserController {
   @PostMapping("/signup")
   public ResponseEntity<?> signup(
       @Valid @RequestBody SignupDto signupDto,
+      EmailVerificationDto emailVerificationDto,
       BindingResult result,
       HttpServletRequest request) {
     log.info("[{}] 사용자의 회원가입 요청", signupDto.getEmail());
@@ -80,15 +96,22 @@ public class UserController {
     }
 
     try {
+
+      boolean isEmailChecked = userService.checkEmailDuplicated(signupDto.getEmail());
+
+      String storedVerificationCode = SessionUtil.getVerificationCode(request);
+      String inputVerificationCode = emailVerificationDto.getVerificationCode();
+      boolean isEmailVerified = userService.verifyEmailCode(inputVerificationCode, storedVerificationCode);
+
       // 회원 정보 저장
-      User createdUser = userService.signup(signupDto, request);
+      User createdUser = userService.signup(signupDto, isEmailChecked, isEmailVerified);
 
       request.getSession().invalidate(); // 세션 정보 초기화
       return ResponseEntity.ok(createdUser);
     } catch (Exception e) {
       log.error("회원 가입 실패 : " + e.getMessage());
 
-      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("회원 가입 실패");
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("회원 가입 실패 : " + e.getMessage());
     }
   }
 
