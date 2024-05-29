@@ -21,23 +21,20 @@ public class UserService {
   private final MailService mailService;
 
   // 이메일 중복 확인
-  public boolean isEmailDuplicated(String email) {
-    return userRepository.existsByEmail(email);
+  public void checkEmailDuplicated(String email) {
+    if (userRepository.existsByEmail(email)) {
+      throw new IllegalArgumentException("사용 중인 이메일");
+    }
   }
-
 
   // 인증 코드 생성
   public String generateVerificationCode() {
     return RandomUtil.generateRandomCode();
   }
 
-  // 이메일 중복 확인 & 인증 코드 전송
-  public void checkEmailAndSendCode(String email, HttpServletRequest request) {
-    if (isEmailDuplicated(email)) {
-      throw new IllegalArgumentException("사용 중인 이메일");
-    }
-
-    String verificationCode = generateVerificationCode();
+  // 인증 코드 전송
+  public void sendVerificationCode(String email, HttpServletRequest request) {
+    String verificationCode = RandomUtil.generateRandomCode();
     mailService.sendVerificationEmail(email, verificationCode);
     SessionUtil.setVerificationCode(request, verificationCode);
   }
@@ -57,7 +54,7 @@ public class UserService {
   }
 
   // 회원 정보 저장
-  public User createUser(
+  public User signup(
       SignupDto signupDto,
       HttpServletRequest request) {
 

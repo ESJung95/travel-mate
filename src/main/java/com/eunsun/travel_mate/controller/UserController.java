@@ -27,22 +27,31 @@ public class UserController {
 
   private final UserService userService;
 
-  // 이메일 중복 확인 & 메일로 인증 코드 전송
+  // 이메일 중복 확인
   @PostMapping("/check-email")
-  public ResponseEntity<?> checkEmailAndSendCode(
-      @RequestBody SignupDto signupDto,
-      HttpServletRequest request) {
-    log.info("[{}] 사용자의 이메일 중복 확인 & 인증 코드 전송 요청", signupDto.getEmail());
+  public ResponseEntity<?> checkEmailDuplicated(@RequestBody SignupDto signupDto) {
+    log.info("[{}] 사용자의 이메일 중복 확인 요청", signupDto.getEmail());
 
     try {
-      userService.checkEmailAndSendCode(signupDto.getEmail(), request);
-      return ResponseEntity.ok("이메일로 인증 코드 전송!");
+      userService.checkEmailDuplicated(signupDto.getEmail());
+      return ResponseEntity.ok("사용 가능한 이메일입니다.");
 
     } catch (IllegalArgumentException e) {
-
       return ResponseEntity.badRequest().body(e.getMessage());
     }
   }
+
+  // 메일로 인증 코드 전송
+  @PostMapping("/send-verification-code")
+  public ResponseEntity<?> sendVerificationCode(
+      @RequestBody SignupDto signupDto,
+      HttpServletRequest request) {
+    log.info("[{}] 사용자의 메일로 인증 코드 전송 요청", signupDto.getEmail());
+
+    userService.sendVerificationCode(signupDto.getEmail(), request);
+    return ResponseEntity.ok("이메일로 인증 코드 전송!");
+  }
+
 
   // 이메일 인증 코드 확인
   @PostMapping("/verify-email")
@@ -72,7 +81,7 @@ public class UserController {
 
     try {
       // 회원 정보 저장
-      User createdUser = userService.createUser(signupDto, request);
+      User createdUser = userService.signup(signupDto, request);
 
       request.getSession().invalidate(); // 세션 정보 초기화
       return ResponseEntity.ok(createdUser);

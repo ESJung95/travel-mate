@@ -54,6 +54,4 @@ dependencies {
 tasks.named('test') {
 	useJUnitPlatform()
 
-	// 테스트 실행 후 애플리케이션 계속 실행 유지
-	finalizedBy 'bootRun'
 }
