@@ -1,18 +1,14 @@
 package com.eunsun.travel_mate.service;
 
 import static org.junit.jupiter.api.Assertions.assertAll;
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyBoolean;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -20,8 +16,6 @@ import static org.mockito.Mockito.when;
 import com.eunsun.travel_mate.domain.User;
 import com.eunsun.travel_mate.dto.SignupDto;
 import com.eunsun.travel_mate.repository.UserRepository;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpSession;
 import java.time.LocalDate;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -54,9 +48,10 @@ class UserServiceTest {
     when(userRepository.existsByEmail(email)).thenReturn(true);
 
     // when
-    assertThrows(IllegalArgumentException.class, () -> userService.checkEmailDuplicated(email));
+    boolean result = userService.checkEmailDuplicated(email);
 
     // then
+    assertTrue(result);
     verify(userRepository, times(1)).existsByEmail(email);
   }
 
@@ -68,14 +63,15 @@ class UserServiceTest {
     when(userRepository.existsByEmail(email)).thenReturn(false);
 
     // when
-    assertDoesNotThrow(() -> userService.checkEmailDuplicated(email));
+    boolean result = userService.checkEmailDuplicated(email);
 
     // then
+    assertFalse(result);
     verify(userRepository, times(1)).existsByEmail(email);
   }
 
   @Test
-  @DisplayName("인증 코드가 옳게 생성되는지")
+  @DisplayName("인증 코드 생성이 조건에 맞는지")
   void generateVerificationCode() {
 
     // given
@@ -94,21 +90,36 @@ class UserServiceTest {
   }
 
   @Test
-  @DisplayName("인증 코드가 잘 전송됬는지")
-  void sendVerificationCode() {
+  @DisplayName("인증 코드 전송 성공")
+  void isSendVerificationCode_true() {
 
     // given
     String email = "test@example.com";
-    HttpServletRequest request = mock(HttpServletRequest.class);
-    HttpSession session = mock(HttpSession.class);
-    when(request.getSession()).thenReturn(session);
+    String verificationCode = "123456";
 
     // when
-    userService.sendVerificationCode(email, request);
+    boolean result = userService.sendVerificationCode(email, verificationCode);
 
     // then
-    verify(mailService, times(1)).sendVerificationEmail(eq(email), anyString());
-    verify(session, times(1)).setAttribute(eq("verificationCode"), anyString());
+    assertTrue(result);
+    verify(mailService, times(1)).sendVerificationEmail(eq(email), eq(verificationCode));
+  }
+
+  @Test
+  @DisplayName("인증 코드 전송 실패")
+  void isSendVerificationCode_false() {
+
+    // given
+    String email = "test@example.com";
+    String verificationCode = "123456";
+    doThrow(new RuntimeException("메일 전송 오류")).when(mailService).sendVerificationEmail(email, verificationCode);
+
+    // when
+    boolean result = userService.sendVerificationCode(email, verificationCode);
+
+    // then
+    assertFalse(result);
+    verify(mailService, times(1)).sendVerificationEmail(eq(email), eq(verificationCode));
   }
 
   @Test
@@ -117,17 +128,12 @@ class UserServiceTest {
     // given
     String storedVerificationCode = "abc123";
     String userInputVerificationCode = "abc123";
-    HttpServletRequest request = mock(HttpServletRequest.class);
-    HttpSession session = mock(HttpSession.class);
-    when(request.getSession()).thenReturn(session);
-    when(session.getAttribute("verificationCode")).thenReturn(storedVerificationCode);
 
     // when
-    boolean result = userService.verifyEmailCode(userInputVerificationCode, request);
+    boolean result = userService.verifyEmailCode(userInputVerificationCode, storedVerificationCode);
 
     // then
     assertTrue(result);
-    verify(session, times(1)).setAttribute(eq("isEmailVerified"), eq(true));
   }
 
   @Test
@@ -137,21 +143,16 @@ class UserServiceTest {
     // given
     String storedVerificationCode = "abc123";
     String userInputVerificationCode = "invalid";
-    HttpServletRequest request = mock(HttpServletRequest.class);
-    HttpSession session = mock(HttpSession.class);
-    when(request.getSession()).thenReturn(session);
-    when(session.getAttribute("verificationCode")).thenReturn(storedVerificationCode);
 
     // when
-    boolean result = userService.verifyEmailCode(userInputVerificationCode, request);
+    boolean result = userService.verifyEmailCode(userInputVerificationCode, storedVerificationCode);
 
     // then
     assertFalse(result);
-    verify(session, never()).setAttribute(eq("isEmailVerified"), anyBoolean());
   }
 
   @Test
-  @DisplayName("회원 가입 정보 저장")
+  @DisplayName("회원 가입 정보 저장 성공")
   void signup() {
     // given
     String email = "test@example.com";
@@ -166,11 +167,6 @@ class UserServiceTest {
         .birthdate(birthdate)
         .build();
 
-    HttpServletRequest request = mock(HttpServletRequest.class);
-    HttpSession session = mock(HttpSession.class);
-    when(request.getSession()).thenReturn(session);
-    when(session.getAttribute("isEmailVerified")).thenReturn(true);
-
     String encodedPassword = "encodedPassword";
     when(passwordEncoder.encode(password)).thenReturn(encodedPassword);
 
@@ -178,7 +174,9 @@ class UserServiceTest {
     when(userRepository.save(any(User.class))).thenReturn(user);
 
     // when
-    User savedUser = userService.signup(signupDto, request);
+    boolean isEmailChecked = true;
+    boolean isEmailVerified = true;
+    User savedUser = userService.signup(signupDto, isEmailChecked, isEmailVerified);
 
     // then
     verify(passwordEncoder, times(1)).encode(password);
@@ -187,5 +185,53 @@ class UserServiceTest {
     assertEquals(encodedPassword, savedUser.getPassword());
     assertEquals(name, savedUser.getName());
     assertEquals(birthdate, savedUser.getBirthdate());
+  }
+
+  @Test
+  @DisplayName("회원 가입 정보 저장 실패 -> 이메일 중복 체크 안됨")
+  void signup_emailNotChecked() {
+    // given
+    String email = "test@example.com";
+    String password = "ABCde123@!";
+    String name = "test";
+    LocalDate birthdate = LocalDate.of(2000, 11, 22);
+
+    SignupDto signupDto = SignupDto.builder()
+        .email(email)
+        .password(password)
+        .name(name)
+        .birthdate(birthdate)
+        .build();
+
+    // when
+    boolean isEmailChecked = false;
+    boolean isEmailVerified = true;
+
+    // then
+    assertThrows(IllegalStateException.class, () -> userService.signup(signupDto, isEmailChecked, isEmailVerified));
+  }
+
+  @Test
+  @DisplayName("회원 가입 정보 저장 실패 -> 이메일 인증 안됨")
+  void signup_emailNotVerified() {
+    // given
+    String email = "test@example.com";
+    String password = "ABCde123@!";
+    String name = "test";
+    LocalDate birthdate = LocalDate.of(2000, 11, 22);
+
+    SignupDto signupDto = SignupDto.builder()
+        .email(email)
+        .password(password)
+        .name(name)
+        .birthdate(birthdate)
+        .build();
+
+    // when
+    boolean isEmailChecked = true;
+    boolean isEmailVerified = false;
+
+    // then
+    assertThrows(IllegalStateException.class, () -> userService.signup(signupDto, isEmailChecked, isEmailVerified));
   }
 }
