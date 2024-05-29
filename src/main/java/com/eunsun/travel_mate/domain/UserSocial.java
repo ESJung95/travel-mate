@@ -9,19 +9,16 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import java.time.LocalDateTime;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
 
 @Entity
 @Getter
 @Setter
 @NoArgsConstructor
 @Table(name = "user_social")
-public class UserSocial {
+public class UserSocial extends Base {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -37,10 +34,4 @@ public class UserSocial {
   @Column(nullable = false)
   private String socialId;
 
-  @CreationTimestamp
-  @Column(updatable = false)
-  private LocalDateTime createdAt;
-
-  @UpdateTimestamp
-  private LocalDateTime updatedAt;
 }

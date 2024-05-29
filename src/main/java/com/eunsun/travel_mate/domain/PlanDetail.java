@@ -8,20 +8,18 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.time.LocalTime;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
 
 @Entity
 @Getter
 @Setter
 @NoArgsConstructor
 @Table(name = "plan_detail")
-public class PlanDetail {
+public class PlanDetail extends Base {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -36,6 +34,12 @@ public class PlanDetail {
   private TourInfo tourInfo;
 
   @Column(nullable = false)
+  private LocalDate startDate;
+
+  @Column(nullable = false)
+  private LocalDate endDate;
+
+  @Column(nullable = false)
   private LocalTime startTime;
 
   @Column(nullable = false)
@@ -43,10 +47,4 @@ public class PlanDetail {
 
   private String memo;
 
-  @CreationTimestamp
-  @Column(updatable = false)
-  private LocalDateTime createdAt;
-
-  @UpdateTimestamp
-  private LocalDateTime updatedAt;
 }
