@@ -21,10 +21,8 @@ public class UserService {
   private final MailService mailService;
 
   // 이메일 중복 확인
-  public void checkEmailDuplicated(String email) {
-    if (userRepository.existsByEmail(email)) {
-      throw new IllegalArgumentException("사용 중인 이메일");
-    }
+  public boolean checkEmailDuplicated(String email) {
+    return userRepository.existsByEmail(email);
   }
 
   // 인증 코드 생성
@@ -55,19 +53,25 @@ public class UserService {
 
   // 회원 정보 저장
   public User signup(
-      SignupDto signupDto,
-      HttpServletRequest request) {
+      SignupDto signupDto, HttpServletRequest request) {
 
+    // 이메일 중복 체크
+    if (checkEmailDuplicated(signupDto.getEmail())) {
+      throw new IllegalStateException("가입된 이메일 주소");
+    }
+
+    // 이메일 인증 체크
     if (!SessionUtil.isEmailVerified(request)) {
-      throw new IllegalStateException("이메일 인증을 안함");
+      throw new IllegalStateException("이메일 인증이 완료되지 않음");
     }
 
     // 비밀번호 암호화
     String encodedPassword = passwordEncoder.encode(signupDto.getPassword());
-
     User user = SignupDto.toEntity(signupDto, encodedPassword);
 
+    User savedUser = userRepository.save(user);
     log.info("회원 가입 정보 저장 성공");
-    return userRepository.save(user);
+
+    return savedUser;
     }
 }

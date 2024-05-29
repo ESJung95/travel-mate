@@ -39,8 +39,6 @@ public class SignupDto {
   @DateTimeFormat(pattern = "yyyy-MM-dd")
   private LocalDate birthdate;
 
-  private String verificationCode;
-
 
   public static User toEntity(SignupDto signupDto, String encodedPassword) {
     return User.builder()
