@@ -55,18 +55,7 @@ public class UserService {
 
   // 회원 정보 저장
   public User signup(
-      SignupDto signupDto,
-      boolean isEmailChecked, boolean isEmailVerified) {
-
-    // 이메일 중복 체크 여부
-    if (!isEmailChecked) {
-      throw new IllegalStateException("이메일 중복 체크를 하세요.");
-    }
-
-    // 이메일 코드 인증 여부
-    if (!isEmailVerified) {
-      throw new IllegalStateException("이메일 본인 인증을 하세요.");
-    }
+      SignupDto signupDto) {
 
     // 비밀번호 암호화
     String encodedPassword = passwordEncoder.encode(signupDto.getPassword());
@@ -76,5 +65,5 @@ public class UserService {
     log.info("회원 가입 정보 저장 성공");
 
     return savedUser;
-    }
+  }
 }

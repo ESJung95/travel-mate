@@ -85,7 +85,6 @@ public class UserController {
   @PostMapping("/signup")
   public ResponseEntity<?> signup(
       @Valid @RequestBody SignupDto signupDto,
-      EmailVerificationDto emailVerificationDto,
       BindingResult result,
       HttpServletRequest request) {
     log.info("[{}] 사용자의 회원가입 요청", signupDto.getEmail());
@@ -97,14 +96,8 @@ public class UserController {
 
     try {
 
-      boolean isEmailChecked = userService.checkEmailDuplicated(signupDto.getEmail());
-
-      String storedVerificationCode = SessionUtil.getVerificationCode(request);
-      String inputVerificationCode = emailVerificationDto.getVerificationCode();
-      boolean isEmailVerified = userService.verifyEmailCode(inputVerificationCode, storedVerificationCode);
-
       // 회원 정보 저장
-      User createdUser = userService.signup(signupDto, isEmailChecked, isEmailVerified);
+      User createdUser = userService.signup(signupDto);
 
       request.getSession().invalidate(); // 세션 정보 초기화
       return ResponseEntity.ok(createdUser);
