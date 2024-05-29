@@ -4,7 +4,6 @@ import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -150,7 +149,6 @@ class UserServiceTest {
     // then
     assertFalse(result);
   }
-
   @Test
   @DisplayName("회원 가입 정보 저장 성공")
   void signup() {
@@ -174,9 +172,7 @@ class UserServiceTest {
     when(userRepository.save(any(User.class))).thenReturn(user);
 
     // when
-    boolean isEmailChecked = true;
-    boolean isEmailVerified = true;
-    User savedUser = userService.signup(signupDto, isEmailChecked, isEmailVerified);
+    User savedUser = userService.signup(signupDto);
 
     // then
     verify(passwordEncoder, times(1)).encode(password);
@@ -185,53 +181,5 @@ class UserServiceTest {
     assertEquals(encodedPassword, savedUser.getPassword());
     assertEquals(name, savedUser.getName());
     assertEquals(birthdate, savedUser.getBirthdate());
-  }
-
-  @Test
-  @DisplayName("회원 가입 정보 저장 실패 -> 이메일 중복 체크 안됨")
-  void signup_emailNotChecked() {
-    // given
-    String email = "test@example.com";
-    String password = "ABCde123@!";
-    String name = "test";
-    LocalDate birthdate = LocalDate.of(2000, 11, 22);
-
-    SignupDto signupDto = SignupDto.builder()
-        .email(email)
-        .password(password)
-        .name(name)
-        .birthdate(birthdate)
-        .build();
-
-    // when
-    boolean isEmailChecked = false;
-    boolean isEmailVerified = true;
-
-    // then
-    assertThrows(IllegalStateException.class, () -> userService.signup(signupDto, isEmailChecked, isEmailVerified));
-  }
-
-  @Test
-  @DisplayName("회원 가입 정보 저장 실패 -> 이메일 인증 안됨")
-  void signup_emailNotVerified() {
-    // given
-    String email = "test@example.com";
-    String password = "ABCde123@!";
-    String name = "test";
-    LocalDate birthdate = LocalDate.of(2000, 11, 22);
-
-    SignupDto signupDto = SignupDto.builder()
-        .email(email)
-        .password(password)
-        .name(name)
-        .birthdate(birthdate)
-        .build();
-
-    // when
-    boolean isEmailChecked = true;
-    boolean isEmailVerified = false;
-
-    // then
-    assertThrows(IllegalStateException.class, () -> userService.signup(signupDto, isEmailChecked, isEmailVerified));
   }
 }
