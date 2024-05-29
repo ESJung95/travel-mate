@@ -37,7 +37,7 @@ public class SecurityConfig {
         )
         .authorizeHttpRequests(auth -> auth
             .requestMatchers(PathRequest.toH2Console()).permitAll()
-            .requestMatchers("/user/signup", "/user/check-email", "/user/verify-email").permitAll()
+            .requestMatchers("/user/signup", "/user/check-email", "/user/verify-email", "/user/send-verification-code").permitAll()
             .anyRequest().authenticated());
 
 
