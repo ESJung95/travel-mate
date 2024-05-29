@@ -3,24 +3,20 @@ package com.eunsun.travel_mate.repository;
 import com.eunsun.travel_mate.domain.User;
 import java.time.LocalDate;
 import org.assertj.core.api.Assertions;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.test.context.ActiveProfiles;
 
 @DataJpaTest
-@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
+@ActiveProfiles("test")
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.ANY)
 class UserRepositoryTest {
 
   @Autowired
   private UserRepository userRepository;
-
-  @AfterEach
-  void cleanUp() {
-    userRepository.deleteAll();
-  }
 
   @Test
   @DisplayName("이메일이 DB에 존재하는 경우")
@@ -45,7 +41,6 @@ class UserRepositoryTest {
   @Test
   @DisplayName("이메일이 DB에 존재하지 않는 경우")
   void noneExistsByEmail() {
-
     // given
 
     // when
