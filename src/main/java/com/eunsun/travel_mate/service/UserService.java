@@ -45,12 +45,8 @@ public class UserService {
   public boolean verifyEmailCode(
       String verificationCode, String storedVerificationCode) {
 
-    if (storedVerificationCode == null
-        || !storedVerificationCode.equals(verificationCode)) {
-      return false;
-    }
-
-    return true;
+    return storedVerificationCode != null
+        && storedVerificationCode.equals(verificationCode);
   }
 
   // 회원 정보 저장
