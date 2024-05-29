@@ -107,7 +107,7 @@ public class UserController {
   }
   // 회원 정보 조회
   @GetMapping("/{userId}")
-  public ResponseEntity<?> gotUser() {
+  public ResponseEntity<?> getUser() {
 
     return ResponseEntity.ok("회원 정보 조회 성공");
   }
