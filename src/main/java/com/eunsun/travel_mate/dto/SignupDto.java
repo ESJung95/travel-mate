@@ -40,6 +40,7 @@ public class SignupDto {
   private LocalDate birthdate;
 
 
+  // SignupDto 회원 가입 정보를 User 엔티티로 변환
   public static User toEntity(SignupDto signupDto, String encodedPassword) {
     return User.builder()
         .email(signupDto.getEmail())
