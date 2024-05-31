@@ -13,8 +13,10 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.eunsun.travel_mate.domain.User;
-import com.eunsun.travel_mate.dto.SignupDto;
+import com.eunsun.travel_mate.dto.request.SignupRequestDto;
+import com.eunsun.travel_mate.dto.response.SignupResponseDto;
 import com.eunsun.travel_mate.repository.UserRepository;
+import com.eunsun.travel_mate.util.UserUtils;
 import java.time.LocalDate;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -158,7 +160,7 @@ class UserServiceTest {
     String name = "test";
     LocalDate birthdate = LocalDate.of(2000, 11, 22);
 
-    SignupDto signupDto = SignupDto.builder()
+    SignupRequestDto signupRequestDto = SignupRequestDto.builder()
         .email(email)
         .password(password)
         .name(name)
@@ -168,18 +170,17 @@ class UserServiceTest {
     String encodedPassword = "encodedPassword";
     when(passwordEncoder.encode(password)).thenReturn(encodedPassword);
 
-    User user = SignupDto.toEntity(signupDto, encodedPassword);
+    User user = UserUtils.toEntity(signupRequestDto, encodedPassword);
     when(userRepository.save(any(User.class))).thenReturn(user);
 
     // when
-    User savedUser = userService.signup(signupDto);
+    SignupResponseDto signupResponseDto = userService.signup(signupRequestDto);
 
     // then
     verify(passwordEncoder, times(1)).encode(password);
     verify(userRepository, times(1)).save(any(User.class));
-    assertEquals(email, savedUser.getEmail());
-    assertEquals(encodedPassword, savedUser.getPassword());
-    assertEquals(name, savedUser.getName());
-    assertEquals(birthdate, savedUser.getBirthdate());
+    assertNotNull(signupResponseDto);
+    assertEquals(email, signupResponseDto.getEmail());
+    assertEquals(name, signupResponseDto.getName());
   }
 }
