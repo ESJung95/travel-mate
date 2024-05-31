@@ -3,7 +3,6 @@ package com.eunsun.travel_mate.security;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -33,10 +32,9 @@ public class SecurityConfig {
     http
         .csrf(AbstractHttpConfigurer::disable)
         .sessionManagement(sessionManagement ->
-            sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+            sessionManagement.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
         )
         .authorizeHttpRequests(auth -> auth
-            .requestMatchers(PathRequest.toH2Console()).permitAll()
             .requestMatchers("/user/signup", "/user/check-email", "/user/verify-email", "/user/send-verification-code").permitAll()
             .anyRequest().authenticated());
 
