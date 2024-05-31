@@ -35,7 +35,8 @@ public class SecurityConfig {
             sessionManagement.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
         )
         .authorizeHttpRequests(auth -> auth
-            .requestMatchers("/user/signup", "/user/check-email", "/user/verify-email", "/user/send-verification-code").permitAll()
+            .requestMatchers("/user/signup", "/user/check-email", "/user/verify-email", "/user/send-verification-code"
+            ,"/swagger-ui/index.html").permitAll()
             .anyRequest().authenticated());
 
 
