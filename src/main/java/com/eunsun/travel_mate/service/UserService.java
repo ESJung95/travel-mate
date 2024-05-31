@@ -68,37 +68,45 @@ public class UserService {
     return UserUtils.toSignupResponseDto(savedUser);
   }
 
-  // 로그인 - 이메일 조회 + 비밀번호 일치 확인
+  // 로그인 : 이메일 조회 + 비밀번호 일치 확인
   public LoginResponseDto loginUser(String email, String password) {
     log.info("로그인 요청 - 이메일: {}", email);
 
-    // 이메일로 User 조회
-    Optional<User> optionalUser =  userRepository.findByEmail(email);
-
-    User user = null;
-    if (optionalUser.isPresent()) {
-      user = optionalUser.get();
-      log.info("사용자 조회 성공 - 사용자 ID: {}", user.getEmail());
-    } else {
-      log.info("사용자 조회 실패 - 이메일: {}", email);
-      throw new UsernameNotFoundException("가입된 사용자가 없습니다.");
-    }
-
-    // 비밀번호 일치 확인
-    String encodedPassword = passwordEncoder.encode(password);
-    log.info("입력된 비밀번호 암호화 - 암호화된 비밀번호: {}", encodedPassword);
-
-    String storedEncodedPassword = user.getPassword();
-    if (!passwordEncoder.matches(password, storedEncodedPassword)) {
-      log.warn("비밀번호 불일치 - 사용자 ID: {}", user.getEmail());
-      throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
-    }
+    User user = findUserByEmail(email);
+    verifyPassword(password, user);
 
     String token = generateToken(user);
 
     return UserUtils.createLoginResponse(token, user.getName());
   }
 
+  // 이메일로 User 조회
+  private User findUserByEmail(String email) {
+    Optional<User> optionalUser = userRepository.findByEmail(email);
+
+    if (optionalUser.isPresent()) {
+
+      User user = optionalUser.get();
+      log.info("사용자 조회 성공 - 사용자 ID: {}", user.getEmail());
+      return user;
+
+    } else {
+
+      log.info("사용자 조회 실패 - 이메일: {}", email);
+      throw new UsernameNotFoundException("가입된 사용자가 없습니다.");
+    }
+  }
+
+  // 비밀번호 일치 확인
+  private void verifyPassword(String inputPassword, User user) {
+    String storedEncodedPassword = user.getPassword();
+    if (!passwordEncoder.matches(inputPassword, storedEncodedPassword)) {
+      log.warn("비밀번호 불일치 - 사용자 ID: {}", user.getEmail());
+      throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
+    }
+  }
+
+  // JWT 토큰 생성
   private String generateToken(User user) {
     log.info("토큰 생성 성공 - 사용자 ID: {}", user.getEmail());
 
