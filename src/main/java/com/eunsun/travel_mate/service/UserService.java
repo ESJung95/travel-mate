@@ -1,8 +1,8 @@
 package com.eunsun.travel_mate.service;
 
 import com.eunsun.travel_mate.domain.User;
-import com.eunsun.travel_mate.dto.response.LoginResponseDto;
 import com.eunsun.travel_mate.dto.request.SignupRequestDto;
+import com.eunsun.travel_mate.dto.response.LoginResponseDto;
 import com.eunsun.travel_mate.dto.response.SignupResponseDto;
 import com.eunsun.travel_mate.repository.UserRepository;
 import com.eunsun.travel_mate.util.RandomUtil;
@@ -10,7 +10,6 @@ import com.eunsun.travel_mate.util.UserUtils;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.h2.security.auth.AuthConfigException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;

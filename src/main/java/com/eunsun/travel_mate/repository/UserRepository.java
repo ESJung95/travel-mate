@@ -2,7 +2,6 @@ package com.eunsun.travel_mate.repository;
 
 import com.eunsun.travel_mate.domain.User;
 import java.util.Optional;
-import javax.swing.text.html.Option;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
