@@ -1,6 +1,5 @@
-package com.eunsun.travel_mate.dto;
+package com.eunsun.travel_mate.dto.request;
 
-import com.eunsun.travel_mate.domain.User;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -20,7 +19,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class SignupDto {
+public class SignupRequestDto {
 
   @NotBlank(message = "이메일은 필수 입력 값 입니다.")
   @Pattern(regexp = "^(?:\\w+\\.?)*\\w+@(?:\\w+\\.)+\\w+$", message = "이메일 형식이 올바르지 않습니다.")
@@ -39,14 +38,4 @@ public class SignupDto {
   @DateTimeFormat(pattern = "yyyy-MM-dd")
   private LocalDate birthdate;
 
-
-  // SignupDto 회원 가입 정보를 User 엔티티로 변환
-  public static User toEntity(SignupDto signupDto, String encodedPassword) {
-    return User.builder()
-        .email(signupDto.getEmail())
-        .password(encodedPassword)
-        .name(signupDto.getName())
-        .birthdate(signupDto.getBirthdate())
-        .build();
-  }
 }
