@@ -93,8 +93,11 @@ public class UserService {
 
   // 이메일로 User 조회
   private User findUserByEmail(String email) {
-    return userRepository.findByEmail(email)
+    User user =  userRepository.findByEmail(email)
         .orElseThrow(() -> new UsernameNotFoundException("가입된 사용자가 없습니다. : " + email));
+
+    log.info("이메일로 User 정보 조회 성공");
+    return user;
   }
 
   // 비밀번호 일치 확인
