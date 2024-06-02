@@ -4,6 +4,7 @@ import com.eunsun.travel_mate.domain.User;
 import com.eunsun.travel_mate.dto.request.SignupRequestDto;
 import com.eunsun.travel_mate.dto.response.LoginResponseDto;
 import com.eunsun.travel_mate.dto.response.SignupResponseDto;
+import java.time.LocalDateTime;
 
 public class UserUtils {
 
@@ -26,10 +27,19 @@ public class UserUtils {
   }
 
   // LoginResponseDto 생성
-  public static LoginResponseDto createLoginResponse(String token, String name) {
+  public static LoginResponseDto createLoginResponse(
+      String token,
+      Long userId, String name, String email, String role,
+      LocalDateTime loginTime, LocalDateTime tokenExpiryTime) {
+
     return LoginResponseDto.builder()
         .token(token)
+        .userId(userId)
         .name(name)
+        .email(email)
+        .role(role)
+        .loginTime(loginTime)
+        .tokenExpiryTime(tokenExpiryTime)
         .build();
   }
 

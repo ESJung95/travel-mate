@@ -4,12 +4,14 @@ import com.eunsun.travel_mate.domain.User;
 import com.eunsun.travel_mate.dto.request.SignupRequestDto;
 import com.eunsun.travel_mate.dto.response.LoginResponseDto;
 import com.eunsun.travel_mate.dto.response.SignupResponseDto;
+import com.eunsun.travel_mate.dto.response.TokenDetailDto;
 import com.eunsun.travel_mate.repository.UserRepository;
+import com.eunsun.travel_mate.security.JwtTokenProvider;
 import com.eunsun.travel_mate.util.RandomUtil;
 import com.eunsun.travel_mate.util.UserUtils;
-import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -22,6 +24,7 @@ public class UserService {
   private final UserRepository userRepository;
   private final PasswordEncoder passwordEncoder;
   private final MailService mailService;
+  private final JwtTokenProvider jwtTokenProvider;
 
   // 이메일 중복 확인
   public boolean checkEmailDuplicated(String email) {
@@ -73,43 +76,33 @@ public class UserService {
     log.info("로그인 요청 - 이메일: {}", email);
 
     User user = findUserByEmail(email);
-    verifyPassword(password, user);
+    validatePassword(password, user);
 
-    String token = generateToken(user);
+    TokenDetailDto tokenDetail = jwtTokenProvider.generateToken(user.getUserId(), user.getRole());
 
-    return UserUtils.createLoginResponse(token, user.getName());
+    return UserUtils.createLoginResponse(
+        tokenDetail.getToken(),
+        user.getUserId(),
+        user.getName(),
+        user.getEmail(),
+        user.getRole(),
+        tokenDetail.getLoginTime(),
+        tokenDetail.getTokenExpiryTime()
+    );
   }
 
   // 이메일로 User 조회
   private User findUserByEmail(String email) {
-    Optional<User> optionalUser = userRepository.findByEmail(email);
-
-    if (optionalUser.isPresent()) {
-
-      User user = optionalUser.get();
-      log.info("사용자 조회 성공 - 사용자 ID: {}", user.getEmail());
-      return user;
-
-    } else {
-
-      log.info("사용자 조회 실패 - 이메일: {}", email);
-      throw new UsernameNotFoundException("가입된 사용자가 없습니다.");
-    }
+    return userRepository.findByEmail(email)
+        .orElseThrow(() -> new UsernameNotFoundException("가입된 사용자가 없습니다. : " + email));
   }
 
   // 비밀번호 일치 확인
-  private void verifyPassword(String inputPassword, User user) {
-    String storedEncodedPassword = user.getPassword();
-    if (!passwordEncoder.matches(inputPassword, storedEncodedPassword)) {
-      log.warn("비밀번호 불일치 - 사용자 ID: {}", user.getEmail());
-      throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
+  private void validatePassword(String inputPassword, User user) {
+    if (!passwordEncoder.matches(inputPassword, user.getPassword())) {
+
+      throw new BadCredentialsException("비밀번호가 일치하지 않습니다.");
     }
   }
 
-  // JWT 토큰 생성
-  private String generateToken(User user) {
-    log.info("토큰 생성 성공 - 사용자 ID: {}", user.getEmail());
-
-    return "토큰";
-  }
 }

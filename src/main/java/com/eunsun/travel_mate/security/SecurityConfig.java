@@ -2,7 +2,6 @@ package com.eunsun.travel_mate.security;
 
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -13,13 +12,15 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
-@Slf4j
 @EnableWebSecurity
 @EnableMethodSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
+
+  private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
   @Bean
   public PasswordEncoder passwordEncoder() {
@@ -30,15 +31,30 @@ public class SecurityConfig {
   @Bean
   public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
     http
+        // JWT 인증을 사용하는 경우 - csrf 보호 비활성화
         .csrf(AbstractHttpConfigurer::disable)
+
+        // cors 설정 비활성화
+        .cors(AbstractHttpConfigurer::disable)
+
+        // httpBasic 비활성화
+        .httpBasic(AbstractHttpConfigurer::disable)
+
+        // session 설정
         .sessionManagement(sessionManagement ->
             sessionManagement.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
         )
-        .authorizeHttpRequests(auth -> auth
-            .requestMatchers("/user/signup", "/user/check-email", "/user/verify-email", "/user/send-verification-code"
-            ,"/swagger-ui/index.html").permitAll()
-            .anyRequest().authenticated());
+        .authorizeHttpRequests(authHttpRequest -> authHttpRequest
+            // 인증 없이 허용
+            .requestMatchers("/swagger-ui/index.html").permitAll()
+            .requestMatchers("/user/signup", "/user/check-email", "/user/verify-email", "/user/send-verification-code").permitAll()
+            .requestMatchers("/user/login").permitAll()
 
+            // 나머지는 인증 필요
+            .anyRequest().authenticated())
+
+        // JWT 필터 추가
+        .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
     return http.build();
   }
