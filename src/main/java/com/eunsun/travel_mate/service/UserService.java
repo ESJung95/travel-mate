@@ -78,16 +78,16 @@ public class UserService {
     User user = findUserByEmail(email);
     validatePassword(password, user);
 
-    TokenDetailDto tokenDetail = jwtTokenProvider.generateToken(user.getUserId(), user.getRole());
+    TokenDetailDto tokenDetailDto = jwtTokenProvider.generateToken(user.getUserId(), user.getRole());
 
     return UserUtils.createLoginResponse(
-        tokenDetail.getToken(),
+        tokenDetailDto.getToken(),
         user.getUserId(),
         user.getName(),
         user.getEmail(),
         user.getRole(),
-        tokenDetail.getLoginTime(),
-        tokenDetail.getTokenExpiryTime()
+        tokenDetailDto.getLoginTime(),
+        tokenDetailDto.getTokenExpiryTime()
     );
   }
 
