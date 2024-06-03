@@ -18,6 +18,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -133,25 +134,20 @@ public class UserController {
 
   // 로그 아웃
   @PostMapping("/logout")
-  public ResponseEntity<?> logout(
-      HttpServletRequest request,
-      JwtAuthenticationFilter jwtAuthenticationFilter) {
+  public ResponseEntity<?> logout(Authentication authentication) {
 
     try {
-      // Authorization 헤더에서 토큰 추출
-      String token = jwtAuthenticationFilter.resolveToken(request);
-      if (token == null) {
-        return ResponseEntity.badRequest().body("유효하지 않은 토큰");
+      if (authentication == null || !authentication.isAuthenticated()) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("인증되지 않은 사용자");
       }
+
+      // JWT 토큰 문자열 추출
+      String token = jwtTokenProvider.getToken(authentication);
 
       // 토큰에서 만료 시간 추출
       LocalDateTime expiredTime = jwtTokenProvider.getExpiredTime(token);
 
-      // 토큰에서 JWT ID 추출
-      String jwtId = jwtTokenProvider.extractJwtId(token);
-
-      TokenBlacklistRequestDto tokenBlacklistRequestDto = new TokenBlacklistRequestDto(jwtId,
-          expiredTime);
+      TokenBlacklistRequestDto tokenBlacklistRequestDto = new TokenBlacklistRequestDto(token, expiredTime);
 
       // 블랙리스트에 추가
       tokenBlacklistService.addToBlacklist(tokenBlacklistRequestDto);

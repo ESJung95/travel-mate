@@ -25,7 +25,7 @@ public class TokenBlacklistService {
       TokenBlacklist tokenBlacklist = TokenBlacklistRequestDto.toEntity(
           tokenBlacklistRequestDto.getToken(), tokenBlacklistRequestDto.getExpiredTime());
       tokenBlacklistRepository.save(tokenBlacklist);
-      log.info("토큰이 블랙리스트에 추가되었습니다 : {}", tokenBlacklistRequestDto.getToken());
+      log.info("토큰이 블랙리스트에 추가되었습니다! 토큰 유효시간 : {}", tokenBlacklistRequestDto.getExpiredTime());
     } catch (Exception e) {
       log.error("블랙리스트 추가 중 오류 발생", e);
       throw e;

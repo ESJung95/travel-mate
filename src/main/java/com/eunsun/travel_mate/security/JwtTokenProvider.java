@@ -50,9 +50,6 @@ public class JwtTokenProvider {
     Claims claims = Jwts.claims().setSubject(String.valueOf(id));
     claims.put(KEY_ROLE, role);
 
-    // id 값을 JWT ID로 설정
-    claims.setId(String.valueOf(id));
-
     Date now = new Date();
     Date expiredTime = new Date(now.getTime() + TOKEN_EXPIRE_TIME);
 
@@ -98,26 +95,13 @@ public class JwtTokenProvider {
     return new UsernamePasswordAuthenticationToken(user, token, user.getAuthorities());
   }
 
-  // JWT 토큰에서 JWT ID 추출
-  public String extractJwtId(String token) {
-    try {
-      Claims claims = Jwts.parserBuilder()
-          .setSigningKey(secretKey)
-          .build()
-          .parseClaimsJws(token)
-          .getBody();
-
-      String jwtId = claims.getId();
-      if (jwtId == null) {
-        log.error("JWT ID is null");
-        throw new IllegalArgumentException("JWT ID is null");
-      }
-
-      return jwtId;
-    } catch (io.jsonwebtoken.JwtException e) {
-      log.error("Invalid JWT token: {}", e.getMessage());
-      throw e;
+  // JWT 토큰에서 token String 추출
+  public String getToken(Authentication authentication) {
+    String token = null;
+    if (authentication != null && authentication.getCredentials() != null) {
+      token = authentication.getCredentials().toString();
     }
+    return token;
   }
 
   // JWT 토큰에서 만료 시간 추출
