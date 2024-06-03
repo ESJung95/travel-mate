@@ -4,25 +4,37 @@ import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.eunsun.travel_mate.domain.User;
 import com.eunsun.travel_mate.dto.request.SignupRequestDto;
+import com.eunsun.travel_mate.dto.response.LoginResponseDto;
 import com.eunsun.travel_mate.dto.response.SignupResponseDto;
+import com.eunsun.travel_mate.dto.response.TokenDetailDto;
 import com.eunsun.travel_mate.repository.UserRepository;
+import com.eunsun.travel_mate.security.JwtTokenProvider;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.Optional;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 @ExtendWith(MockitoExtension.class)
@@ -37,14 +49,31 @@ class UserServiceTest {
   @Mock
   private PasswordEncoder passwordEncoder;
 
+  @Mock
+  private JwtTokenProvider jwtTokenProvider;
+
   @InjectMocks
   private UserService userService;
 
+  private User user;
+  private String email;
+  private String password;
+
+  @BeforeEach
+  void setUp() {
+    email = "test@example.com";
+    password = "password";
+    String encodedPassword = "encodedPassword";
+    user = User.builder()
+        .email(email)
+        .password(encodedPassword)
+        .userId(1L)
+        .build();
+  }
   @Test
   @DisplayName("중복된 이메일이 DB에 있는 경우")
   void isEmailDuplicated_true() {
     // given
-    String email = "test@example.com";
     when(userRepository.existsByEmail(email)).thenReturn(true);
 
     // when
@@ -59,7 +88,6 @@ class UserServiceTest {
   @DisplayName("중복된 이메일이 DB에 없는 경우")
   void isEmailDuplicated_false() {
     // given
-    String email = "test@example.com";
     when(userRepository.existsByEmail(email)).thenReturn(false);
 
     // when
@@ -154,8 +182,6 @@ class UserServiceTest {
   @DisplayName("회원 가입 정보 저장 성공")
   void signup() {
     // given
-    String email = "test@example.com";
-    String password = "ABCde123@!";
     String name = "test";
     LocalDate birthdate = LocalDate.of(2000, 11, 22);
 
@@ -181,5 +207,58 @@ class UserServiceTest {
     assertNotNull(signupResponseDto);
     assertEquals(email, signupResponseDto.getEmail());
     assertEquals(name, signupResponseDto.getName());
+  }
+
+  @Test
+  @DisplayName("로그인 성공")
+  void loginUser_success() {
+    // given
+    String encodedPassword = "encodedPassword";
+    when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
+    when(passwordEncoder.matches(password, encodedPassword)).thenReturn(true);
+
+    LocalDateTime loginTime = LocalDateTime.now();
+    LocalDateTime tokenExpiryTime = loginTime.plusHours(1);
+    TokenDetailDto tokenDetailDto = new TokenDetailDto("token", loginTime, tokenExpiryTime);
+
+    when(jwtTokenProvider.generateToken(anyLong(), any())).thenReturn(tokenDetailDto);
+
+    // when
+    LoginResponseDto loginResponseDto = userService.loginUser(email, password);
+
+    // then
+    assertNotNull(loginResponseDto);
+    assertEquals(email, loginResponseDto.getEmail());
+    verify(userRepository, times(1)).findByEmail(email);
+    verify(passwordEncoder, times(1)).matches(password, user.getPassword());
+    verify(jwtTokenProvider, times(1)).generateToken(anyLong(), any());
+  }
+
+  @Test
+  @DisplayName("로그인 실패 = 사용자를 찾을 수 없음")
+  void loginUser_userNotFound() {
+    // given
+    when(userRepository.findByEmail(email)).thenReturn(Optional.empty());
+
+    // when, then
+    assertThrows(UsernameNotFoundException.class, () -> userService.loginUser(email, password));
+    verify(userRepository, times(1)).findByEmail(email);
+    verify(passwordEncoder, never()).matches(anyString(), anyString());
+    verify(jwtTokenProvider, never()).generateToken(anyLong(), any());
+  }
+
+  @Test
+  @DisplayName("로그인 실패 = 유효하지 않은 비밀번호")
+  void loginUser_invalidPassword() {
+    // given
+    String encodedPassword = "encodedPassword";
+    when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
+    when(passwordEncoder.matches(password, encodedPassword)).thenReturn(false);
+
+    // when, then
+    assertThrows(BadCredentialsException.class, () -> userService.loginUser(email, password));
+    verify(userRepository, times(1)).findByEmail(email);
+    verify(passwordEncoder, times(1)).matches(password, user.getPassword());
+    verify(jwtTokenProvider, never()).generateToken(anyLong(), any());
   }
 }
