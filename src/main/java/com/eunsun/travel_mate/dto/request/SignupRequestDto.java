@@ -1,5 +1,6 @@
 package com.eunsun.travel_mate.dto.request;
 
+import com.eunsun.travel_mate.domain.User;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -38,4 +39,13 @@ public class SignupRequestDto {
   @DateTimeFormat(pattern = "yyyy-MM-dd")
   private LocalDate birthdate;
 
+  // SignupRequestDto -> UserEntity
+  public static User toEntity(SignupRequestDto signupRequestDto,String encodedPassword) {
+    return User.builder()
+        .email(signupRequestDto.email)
+        .password(encodedPassword)
+        .name(signupRequestDto.name)
+        .birthdate(signupRequestDto.birthdate)
+        .build();
+  }
 }

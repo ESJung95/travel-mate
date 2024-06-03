@@ -16,7 +16,6 @@ import com.eunsun.travel_mate.domain.User;
 import com.eunsun.travel_mate.dto.request.SignupRequestDto;
 import com.eunsun.travel_mate.dto.response.SignupResponseDto;
 import com.eunsun.travel_mate.repository.UserRepository;
-import com.eunsun.travel_mate.util.UserUtils;
 import java.time.LocalDate;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -170,7 +169,7 @@ class UserServiceTest {
     String encodedPassword = "encodedPassword";
     when(passwordEncoder.encode(password)).thenReturn(encodedPassword);
 
-    User user = UserUtils.toEntity(signupRequestDto, encodedPassword);
+    User user = SignupRequestDto.toEntity(signupRequestDto, encodedPassword);
     when(userRepository.save(any(User.class))).thenReturn(user);
 
     // when

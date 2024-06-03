@@ -8,7 +8,6 @@ import com.eunsun.travel_mate.dto.response.TokenDetailDto;
 import com.eunsun.travel_mate.repository.UserRepository;
 import com.eunsun.travel_mate.security.JwtTokenProvider;
 import com.eunsun.travel_mate.util.RandomUtil;
-import com.eunsun.travel_mate.util.UserUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -63,12 +62,12 @@ public class UserService {
 
     // 비밀번호 암호화
     String encodedPassword = passwordEncoder.encode(signupRequestDto.getPassword());
-    User user = UserUtils.toEntity(signupRequestDto, encodedPassword);
+    User user = SignupRequestDto.toEntity(signupRequestDto, encodedPassword);
 
     User savedUser = userRepository.save(user);
     log.info("회원 가입 정보 저장 성공");
 
-    return UserUtils.toSignupResponseDto(savedUser);
+    return SignupResponseDto.toSignupResponseDto(savedUser);
   }
 
   // 로그인 : 이메일 조회 + 비밀번호 일치 확인
@@ -80,7 +79,7 @@ public class UserService {
 
     TokenDetailDto tokenDetailDto = jwtTokenProvider.generateToken(user.getUserId(), user.getRole());
 
-    return UserUtils.createLoginResponse(
+    return LoginResponseDto.createLoginResponse(
         tokenDetailDto.getToken(),
         user.getUserId(),
         user.getName(),

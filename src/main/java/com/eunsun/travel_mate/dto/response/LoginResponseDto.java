@@ -27,6 +27,23 @@ public class LoginResponseDto {
   @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
   private LocalDateTime tokenExpiryTime; // 토큰 만료 시간
 
+
+  // LoginResponseDto 생성
+  public static LoginResponseDto createLoginResponse(
+      String token,
+      Long userId, String name, String email, String role,
+      LocalDateTime loginTime, LocalDateTime tokenExpiryTime) {
+
+    return LoginResponseDto.builder()
+        .token(token)
+        .userId(userId)
+        .name(name)
+        .email(email)
+        .role(role)
+        .loginTime(loginTime)
+        .tokenExpiryTime(tokenExpiryTime)
+        .build();
+  }
 }
 
 
