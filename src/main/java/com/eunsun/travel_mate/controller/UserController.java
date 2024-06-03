@@ -6,7 +6,6 @@ import com.eunsun.travel_mate.dto.request.SignupRequestDto;
 import com.eunsun.travel_mate.dto.request.TokenBlacklistRequestDto;
 import com.eunsun.travel_mate.dto.response.LoginResponseDto;
 import com.eunsun.travel_mate.dto.response.SignupResponseDto;
-import com.eunsun.travel_mate.security.JwtAuthenticationFilter;
 import com.eunsun.travel_mate.security.JwtTokenProvider;
 import com.eunsun.travel_mate.service.TokenBlacklistService;
 import com.eunsun.travel_mate.service.UserService;
