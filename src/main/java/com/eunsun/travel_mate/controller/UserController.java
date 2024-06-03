@@ -3,12 +3,17 @@ package com.eunsun.travel_mate.controller;
 import com.eunsun.travel_mate.dto.request.EmailVerificationRequestDto;
 import com.eunsun.travel_mate.dto.request.LoginRequestDto;
 import com.eunsun.travel_mate.dto.request.SignupRequestDto;
+import com.eunsun.travel_mate.dto.request.TokenBlacklistRequestDto;
 import com.eunsun.travel_mate.dto.response.LoginResponseDto;
 import com.eunsun.travel_mate.dto.response.SignupResponseDto;
+import com.eunsun.travel_mate.security.JwtAuthenticationFilter;
+import com.eunsun.travel_mate.security.JwtTokenProvider;
+import com.eunsun.travel_mate.service.TokenBlacklistService;
 import com.eunsun.travel_mate.service.UserService;
 import com.eunsun.travel_mate.util.SessionUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
+import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -29,6 +34,8 @@ import org.springframework.web.bind.annotation.RestController;
 public class UserController {
 
   private final UserService userService;
+  private final TokenBlacklistService tokenBlacklistService;
+  private final JwtTokenProvider jwtTokenProvider;
 
   // 이메일 중복 확인
   @PostMapping("/check-email")
@@ -126,9 +133,35 @@ public class UserController {
 
   // 로그 아웃
   @PostMapping("/logout")
-  public ResponseEntity<?> logout() {
+  public ResponseEntity<?> logout(
+      HttpServletRequest request,
+      JwtAuthenticationFilter jwtAuthenticationFilter) {
 
-    return ResponseEntity.ok("로그아웃 성공");
+    try {
+      // Authorization 헤더에서 토큰 추출
+      String token = jwtAuthenticationFilter.resolveToken(request);
+      if (token == null) {
+        return ResponseEntity.badRequest().body("유효하지 않은 토큰");
+      }
+
+      // 토큰에서 만료 시간 추출
+      LocalDateTime expiredTime = jwtTokenProvider.getExpiredTime(token);
+
+      // 토큰에서 JWT ID 추출
+      String jwtId = jwtTokenProvider.extractJwtId(token);
+
+      TokenBlacklistRequestDto tokenBlacklistRequestDto = new TokenBlacklistRequestDto(jwtId,
+          expiredTime);
+
+      // 블랙리스트에 추가
+      tokenBlacklistService.addToBlacklist(tokenBlacklistRequestDto);
+      return ResponseEntity.ok("로그아웃 성공");
+
+    } catch (Exception e) {
+
+      log.error("로그아웃 처리 중 오류 발생", e);
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("로그아웃 처리 중 오류가 발생했습니다.");
+    }
   }
 
   // 회원 정보 조회

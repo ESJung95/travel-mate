@@ -32,26 +32,33 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
       HttpServletResponse response,
       FilterChain filterChain)
       throws ServletException, IOException {
-
     log.info("JwtAuthenticationFilter - doFilterInternal 호출");
+
     String token = resolveToken(request);
 
-    if (StringUtils.hasText(token) && jwtTokenProvider.validateToken(token)) {
-      Authentication authentication = jwtTokenProvider.getAuthentication(token);
-      SecurityContextHolder.getContext().setAuthentication(authentication);
+    if (StringUtils.hasText(token)) {
+      // 토큰 유효성 검사 및 블랙리스트 확인
+      if (jwtTokenProvider.validateToken(token)) {
+        Authentication authentication = jwtTokenProvider.getAuthentication(token);
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+      } else {
+        log.warn("유효하지 않은 토큰입니다: {}", token);
+        response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "유효하지 않은 토큰입니다.");
+        return;
+      }
     }
 
     filterChain.doFilter(request, response);
   }
 
   // HTTP 요청에서 JWT 토큰을 추출하는 역할
-  private String resolveToken(HttpServletRequest request) {
-    String token = request.getHeader(TOKEN_HEADER);
+  public String resolveToken(HttpServletRequest request) {
+    String bearerToken = request.getHeader(TOKEN_HEADER);
 
-    if (!StringUtils.hasText(token) || !token.startsWith(TOKEN_PREFIX)) {
-      return null;
+    if (StringUtils.hasText(bearerToken) && bearerToken.startsWith(TOKEN_PREFIX)) {
+      return bearerToken.substring(TOKEN_PREFIX.length()).trim();
     }
-
-    return token.substring(TOKEN_PREFIX.length());
+    return null;
   }
+
 }
