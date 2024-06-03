@@ -1,6 +1,5 @@
 package com.eunsun.travel_mate.security;
 
-import com.eunsun.travel_mate.domain.TokenBlacklist;
 import com.eunsun.travel_mate.domain.User;
 import com.eunsun.travel_mate.dto.response.TokenDetailDto;
 import com.eunsun.travel_mate.repository.UserRepository;
@@ -76,10 +75,7 @@ public class JwtTokenProvider {
       Jwts.parserBuilder().setSigningKey(secretKey).build().parseClaimsJws(token);
 
       // 블랙리스트에 토큰이 존재하는지 확인
-      if (tokenBlacklistService.isTokenBlacklisted(token)) {
-        return false;
-      }
-      return true;
+      return !tokenBlacklistService.isTokenBlacklisted(token);
 
     } catch (Exception e) {
       log.error("JWT 토큰 유효성 없음", e);
