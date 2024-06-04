@@ -1,9 +1,11 @@
 package com.eunsun.travel_mate.service;
 
 import com.eunsun.travel_mate.domain.User;
+import com.eunsun.travel_mate.dto.request.FindUserEmailRequestDto;
 import com.eunsun.travel_mate.dto.request.SignupRequestDto;
 import com.eunsun.travel_mate.dto.request.UserNameUpdateRequestDto;
 import com.eunsun.travel_mate.dto.request.UserPasswordUpdateRequestDto;
+import com.eunsun.travel_mate.dto.response.FindUserEmailResponseDto;
 import com.eunsun.travel_mate.dto.response.LoginResponseDto;
 import com.eunsun.travel_mate.dto.response.SignupResponseDto;
 import com.eunsun.travel_mate.dto.response.TokenDetailDto;
@@ -13,6 +15,7 @@ import com.eunsun.travel_mate.exception.UserNotFoundException;
 import com.eunsun.travel_mate.repository.UserRepository;
 import com.eunsun.travel_mate.security.JwtTokenProvider;
 import com.eunsun.travel_mate.util.RandomUtil;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -167,5 +170,17 @@ public class UserService {
 
     userRepository.delete(user);
     log.info("사용자 정보 삭제 완료 : userId = {}", userId);
+  }
+
+  // 이름과 생년월일로 User 아이디 찾기
+  public FindUserEmailResponseDto findUserEmail(FindUserEmailRequestDto findUserEmailRequestDto) {
+
+    Optional<User> optionalUser = userRepository.findByNameAndBirthdate(findUserEmailRequestDto.getName(), findUserEmailRequestDto.getBirthdate());
+    if (optionalUser.isPresent()) { // 이름 + 생년월일이 일치하는게 존재하면
+      User user = optionalUser.get();
+      return FindUserEmailResponseDto.createFindUserEmailResponse(user.getName(), user.getEmail());
+    } else {
+      throw new UserNotFoundException("이메일을 찾을 수 없습니다.");
+    }
   }
 }

@@ -1,6 +1,7 @@
 package com.eunsun.travel_mate.repository;
 
 import com.eunsun.travel_mate.domain.User;
+import java.time.LocalDate;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -13,4 +14,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
   // 로그인 시 받아온 이메일 조회 -> 존재하면 User return
   Optional<User> findByEmail(String email);
+
+  // 이름과 생년월일로 User 정보 조회
+  Optional<User> findByNameAndBirthdate(String name, LocalDate birthdate);
 }

@@ -1,11 +1,13 @@
 package com.eunsun.travel_mate.controller;
 
 import com.eunsun.travel_mate.dto.request.EmailVerificationRequestDto;
+import com.eunsun.travel_mate.dto.request.FindUserEmailRequestDto;
 import com.eunsun.travel_mate.dto.request.LoginRequestDto;
 import com.eunsun.travel_mate.dto.request.SignupRequestDto;
 import com.eunsun.travel_mate.dto.request.TokenBlacklistRequestDto;
 import com.eunsun.travel_mate.dto.request.UserNameUpdateRequestDto;
 import com.eunsun.travel_mate.dto.request.UserPasswordUpdateRequestDto;
+import com.eunsun.travel_mate.dto.response.FindUserEmailResponseDto;
 import com.eunsun.travel_mate.dto.response.LoginResponseDto;
 import com.eunsun.travel_mate.dto.response.SignupResponseDto;
 import com.eunsun.travel_mate.dto.response.UserNameUpdateResponseDto;
@@ -236,6 +238,23 @@ public class UserController {
 
     } catch (Exception e) { // 삭제 실패
       return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("사용자 삭제 중 오류가 발생했습니다.");
+    }
+  }
+
+  // 이름과 생년월일로 User 이메일 찾기
+  @GetMapping("/find/email")
+  public ResponseEntity<?> findUserEmail(@Valid @RequestBody FindUserEmailRequestDto findUserEmailRequestDto) {
+
+    try {
+      FindUserEmailResponseDto findUserEmailResponseDto = userService.findUserEmail(
+          findUserEmailRequestDto);
+      return ResponseEntity.ok(findUserEmailResponseDto);
+
+    } catch (UserNotFoundException e) {
+      return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+
+    } catch (Exception e) {
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("서버 오류가 발생했습니다.");
     }
   }
 
