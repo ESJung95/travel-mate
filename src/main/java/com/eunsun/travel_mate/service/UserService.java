@@ -2,9 +2,11 @@ package com.eunsun.travel_mate.service;
 
 import com.eunsun.travel_mate.domain.User;
 import com.eunsun.travel_mate.dto.request.SignupRequestDto;
+import com.eunsun.travel_mate.dto.request.UserNameUpdateRequestDto;
 import com.eunsun.travel_mate.dto.response.LoginResponseDto;
 import com.eunsun.travel_mate.dto.response.SignupResponseDto;
 import com.eunsun.travel_mate.dto.response.TokenDetailDto;
+import com.eunsun.travel_mate.dto.response.UserNameUpdateResponseDto;
 import com.eunsun.travel_mate.dto.response.UserResponseDto;
 import com.eunsun.travel_mate.exception.UserNotFoundException;
 import com.eunsun.travel_mate.repository.UserRepository;
@@ -119,5 +121,20 @@ public class UserService {
 
     return userResponseDto;
 
+  }
+
+  // 사용자 정보 수정 - 이름
+  public UserNameUpdateResponseDto updateUserName(Long userId, UserNameUpdateRequestDto userNameUpdateRequestDto) {
+    User user = userRepository.findById(userId)
+        .orElseThrow(() -> new UserNotFoundException("사용자를 찾을 수 없습니다 : " + userId));
+
+    String oldName = user.getName();
+    String newName = userNameUpdateRequestDto.getName();
+
+    user.setName(newName);
+    userRepository.save(user);
+    log.info("사용자 이름 수정 완료 : {} -> {}", oldName, newName);
+
+    return new UserNameUpdateResponseDto(newName);
   }
 }

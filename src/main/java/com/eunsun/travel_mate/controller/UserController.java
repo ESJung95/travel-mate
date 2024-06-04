@@ -4,8 +4,10 @@ import com.eunsun.travel_mate.dto.request.EmailVerificationRequestDto;
 import com.eunsun.travel_mate.dto.request.LoginRequestDto;
 import com.eunsun.travel_mate.dto.request.SignupRequestDto;
 import com.eunsun.travel_mate.dto.request.TokenBlacklistRequestDto;
+import com.eunsun.travel_mate.dto.request.UserNameUpdateRequestDto;
 import com.eunsun.travel_mate.dto.response.LoginResponseDto;
 import com.eunsun.travel_mate.dto.response.SignupResponseDto;
+import com.eunsun.travel_mate.dto.response.UserNameUpdateResponseDto;
 import com.eunsun.travel_mate.dto.response.UserResponseDto;
 import com.eunsun.travel_mate.exception.UserNotFoundException;
 import com.eunsun.travel_mate.security.JwtTokenProvider;
@@ -175,9 +177,29 @@ public class UserController {
     }
   }
 
-  // 회원 정보 수정
-  @PutMapping("/{userId}")
-  public ResponseEntity<?> updateUser() {
+  // 회원 정보 수정 - 이름
+  @PutMapping("/{userId}/name")
+  public ResponseEntity<?> updateUserName(@PathVariable Long userId,
+      @RequestBody @Valid UserNameUpdateRequestDto userNameUpdateRequestDto) {
+
+    try {
+      UserNameUpdateResponseDto userNameUpdateResponseDto = userService.updateUserName(userId,
+          userNameUpdateRequestDto);
+      return ResponseEntity.ok(userNameUpdateResponseDto);
+
+    } catch (UserNotFoundException e) { // 사용자 조회 실패
+      log.info("사용자 정보 조회 실패 : {}", userId, e);
+      return ResponseEntity.status(HttpStatus.NOT_FOUND).body("사용자를 찾을 수 없습니다.");
+
+    } catch (Exception e) { // 업데이트 실패
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("사용자 이름 변경 중 오류가 발생했습니다.");
+    }
+  }
+
+  // 회원 정보 수정 - 비밀번호
+  @PutMapping("/{userId}/password")
+  public ResponseEntity<?> updateUserPassword(@PathVariable Long userId) {
+
 
     return ResponseEntity.ok("회원 정보 수정");
   }
