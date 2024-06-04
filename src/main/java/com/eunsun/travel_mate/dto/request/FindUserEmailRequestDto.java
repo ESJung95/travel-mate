@@ -5,6 +5,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Past;
 import java.time.LocalDate;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -12,6 +13,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 @Getter
 @Setter
 @AllArgsConstructor
+@Builder
 public class FindUserEmailRequestDto {
 
   @NotBlank(message = "이름은 필수 입력 값 입니다.")
