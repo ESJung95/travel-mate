@@ -159,4 +159,13 @@ public class UserService {
     userRepository.save(user);
     log.info("사용자 비밀번호 변경 완료 : userId = {}", userId);
   }
+
+  // 사용자 정보 삭제
+  public void deleteUser(Long userId) {
+    User user = userRepository.findById(userId)
+        .orElseThrow(() -> new UserNotFoundException("사용자를 찾을 수 없습니다 : userId = " + userId));
+
+    userRepository.delete(user);
+    log.info("사용자 정보 삭제 완료 : userId = {}", userId);
+  }
 }

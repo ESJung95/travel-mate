@@ -226,6 +226,17 @@ public class UserController {
   @DeleteMapping("/{userId}")
   public ResponseEntity<?> deleteUser(@PathVariable Long userId) {
 
-    return ResponseEntity.ok("회원 정보 삭제 성공");
+    try {
+      userService.deleteUser(userId);
+      return ResponseEntity.ok("회원 정보 삭제 성공");
+
+    } catch (UserNotFoundException e) { // 사용자 조회 실패
+      log.info("사용자 정보 조회 실패 : {}", userId, e);
+      return ResponseEntity.status(HttpStatus.NOT_FOUND).body("사용자를 찾을 수 없습니다.");
+
+    } catch (Exception e) { // 삭제 실패
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("사용자 삭제 중 오류가 발생했습니다.");
+    }
   }
+
 }
