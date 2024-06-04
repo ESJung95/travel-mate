@@ -48,7 +48,7 @@ public class SecurityConfig {
             // 인증 없이 허용
             .requestMatchers("/swagger-ui/index.html").permitAll()
             .requestMatchers("/user/signup", "/user/check-email", "/user/verify-email", "/user/send-verification-code").permitAll()
-            .requestMatchers("/user/login", "/user/logout").permitAll()
+            .requestMatchers("/user/login", "/user/logout", "/user/find/email").permitAll()
 
             // 나머지는 인증 필요
             .anyRequest().authenticated())
