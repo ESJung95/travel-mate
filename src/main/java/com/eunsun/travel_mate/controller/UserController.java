@@ -5,6 +5,7 @@ import com.eunsun.travel_mate.dto.request.LoginRequestDto;
 import com.eunsun.travel_mate.dto.request.SignupRequestDto;
 import com.eunsun.travel_mate.dto.request.TokenBlacklistRequestDto;
 import com.eunsun.travel_mate.dto.request.UserNameUpdateRequestDto;
+import com.eunsun.travel_mate.dto.request.UserPasswordUpdateRequestDto;
 import com.eunsun.travel_mate.dto.response.LoginResponseDto;
 import com.eunsun.travel_mate.dto.response.SignupResponseDto;
 import com.eunsun.travel_mate.dto.response.UserNameUpdateResponseDto;
@@ -21,6 +22,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.Authentication;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -198,16 +200,32 @@ public class UserController {
 
   // 회원 정보 수정 - 비밀번호
   @PutMapping("/{userId}/password")
-  public ResponseEntity<?> updateUserPassword(@PathVariable Long userId) {
+  public ResponseEntity<?> updateUserPassword(@PathVariable Long userId,
+      @RequestBody @Valid UserPasswordUpdateRequestDto userPasswordUpdateRequestDto) {
 
+    try {
+      userService.updateUserPassword(userId, userPasswordUpdateRequestDto);
+      return ResponseEntity.ok("회원 정보 수정 완료");
 
-    return ResponseEntity.ok("회원 정보 수정");
+    } catch (UserNotFoundException e) { // 사용자 조회 실패
+      log.info("사용자 정보 조회 실패 : {}", userId, e);
+      return ResponseEntity.status(HttpStatus.NOT_FOUND).body("사용자를 찾을 수 없습니다.");
+
+    } catch (BadCredentialsException e) { // 현재 비밀번호 인증 실패
+      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
+
+    } catch (IllegalArgumentException e) { // 새로운 비밀번호 확인 실패, 변경할 비빌번호는 현재 비밀번호와 다른지
+      return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+
+    } catch (Exception e) { // 업데이트 실패
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("비밀번호 변경 중 오류가 발생했습니다.");
+    }
   }
 
   // 회원 정보 삭제
   @DeleteMapping("/{userId}")
-  public ResponseEntity<?> deleteUser() {
+  public ResponseEntity<?> deleteUser(@PathVariable Long userId) {
 
-    return ResponseEntity.ok("회원 탈퇴 성공");
+    return ResponseEntity.ok("회원 정보 삭제 성공");
   }
 }

@@ -3,6 +3,7 @@ package com.eunsun.travel_mate.service;
 import com.eunsun.travel_mate.domain.User;
 import com.eunsun.travel_mate.dto.request.SignupRequestDto;
 import com.eunsun.travel_mate.dto.request.UserNameUpdateRequestDto;
+import com.eunsun.travel_mate.dto.request.UserPasswordUpdateRequestDto;
 import com.eunsun.travel_mate.dto.response.LoginResponseDto;
 import com.eunsun.travel_mate.dto.response.SignupResponseDto;
 import com.eunsun.travel_mate.dto.response.TokenDetailDto;
@@ -114,19 +115,19 @@ public class UserService {
   // 사용자 정보 조회
   public UserResponseDto getUserById(Long userId) {
     User user = userRepository.findById(userId)
-        .orElseThrow(() -> new UserNotFoundException("사용자를 찾을 수 없습니다 : " + userId));
+        .orElseThrow(() -> new UserNotFoundException("사용자를 찾을 수 없습니다 : userId = " + userId));
 
     UserResponseDto userResponseDto = UserResponseDto.createUserResponse(user.getEmail(), user.getName(), user.getBirthdate());
-    log.info("사용자 ID 로 사용자 정보 조회 성공 : {}", userId);
+    log.info("사용자 ID 로 사용자 정보 조회 성공 : userId = {}", userId);
 
     return userResponseDto;
 
   }
 
-  // 사용자 정보 수정 - 이름
+  // 사용자 정보 수정 - 이름 변경
   public UserNameUpdateResponseDto updateUserName(Long userId, UserNameUpdateRequestDto userNameUpdateRequestDto) {
     User user = userRepository.findById(userId)
-        .orElseThrow(() -> new UserNotFoundException("사용자를 찾을 수 없습니다 : " + userId));
+        .orElseThrow(() -> new UserNotFoundException("사용자를 찾을 수 없습니다 : userId = " + userId));
 
     String oldName = user.getName();
     String newName = userNameUpdateRequestDto.getName();
@@ -136,5 +137,26 @@ public class UserService {
     log.info("사용자 이름 수정 완료 : {} -> {}", oldName, newName);
 
     return new UserNameUpdateResponseDto(newName);
+  }
+
+  // 사용자 정보 수정 -  비밀번호 변경
+  public void updateUserPassword(Long userId, UserPasswordUpdateRequestDto userPasswordUpdateRequestDto) {
+    User user = userRepository.findById(userId)
+        .orElseThrow(() -> new UserNotFoundException("사용자를 찾을 수 없습니다 : userId = " + userId));
+
+    if (!passwordEncoder.matches(userPasswordUpdateRequestDto.getCurrentPassword(), user.getPassword())) {
+      throw new BadCredentialsException("비밀번호가 일치하지 않습니다.");
+    }
+
+    if (!userPasswordUpdateRequestDto.getNewPassword().equals(userPasswordUpdateRequestDto.getConfirmPassword())) {
+      throw new IllegalArgumentException("새로운 비밀번호와 비밀번호 확인이 일치하지 않습니다.");
+    }
+
+    if (userPasswordUpdateRequestDto.getNewPassword().equals(userPasswordUpdateRequestDto.getCurrentPassword())) {
+      throw new IllegalArgumentException("새로운 비밀번호는 현재 비밀번호와 달라야 합니다.");
+    }
+    user.setPassword(passwordEncoder.encode(userPasswordUpdateRequestDto.getNewPassword()));
+    userRepository.save(user);
+    log.info("사용자 비밀번호 변경 완료 : userId = {}", userId);
   }
 }
