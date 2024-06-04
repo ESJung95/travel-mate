@@ -39,6 +39,22 @@ public class MailComponentTest {
   }
 
   @Test
+  @DisplayName("임시 비밀번호 메일 전송 테스트")
+  public void testSendTemporaryPasswordEmail() {
+    // given
+    String to = "test@example.com";
+    String temporaryPassword = "temp1234";
+    String expectedSubject = "Travel Mate 임시 비밀번호";
+    String expectedText = "임시 비밀번호: " + temporaryPassword;
+
+    // when
+    mailComponent.sendTemporaryPasswordEmail(to, temporaryPassword);
+
+    // then
+    verify(mailSender).send(createExpectedMessage(to, expectedSubject, expectedText));
+  }
+
+  @Test
   @DisplayName("메일 전송 실패 테스트")
   public void testSendEmail_fail() {
     // given
@@ -85,4 +101,6 @@ public class MailComponentTest {
     message.setText(text);
     return message;
   }
+
+
 }
