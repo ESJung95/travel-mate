@@ -5,6 +5,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 
+import com.eunsun.travel_mate.component.MailComponent;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -15,13 +16,13 @@ import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 
 @ExtendWith(MockitoExtension.class)
-public class MailServiceTest {
+public class MailComponentTest {
 
   @Mock
   private JavaMailSender mailSender;
 
   @InjectMocks
-  private MailService mailService;
+  private MailComponent mailComponent;
 
   @Test
   @DisplayName("인증 메일로 전송 테스트")
@@ -32,7 +33,7 @@ public class MailServiceTest {
     String text = "Test Text";
 
     // when
-    mailService.sendEmail(to, subject, text);
+    mailComponent.sendEmail(to, subject, text);
 
     // then
     verify(mailSender).send(createExpectedMessage(to, subject, text));
@@ -51,7 +52,7 @@ public class MailServiceTest {
     // when
     RuntimeException thrownException = null;
     try {
-      mailService.sendEmail(to, subject, text);
+      mailComponent.sendEmail(to, subject, text);
     } catch (RuntimeException e) {
       thrownException = e;
     }
@@ -72,7 +73,7 @@ public class MailServiceTest {
     String expectedText = "인증 코드: " + verificationCode;
 
     // when
-    mailService.sendVerificationEmail(to, verificationCode);
+    mailComponent.sendVerificationEmail(to, verificationCode);
 
     // then
     verify(mailSender).send(createExpectedMessage(to, expectedSubject, expectedText));
