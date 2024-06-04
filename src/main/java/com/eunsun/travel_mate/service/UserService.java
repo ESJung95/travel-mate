@@ -1,6 +1,8 @@
 package com.eunsun.travel_mate.service;
 
+import com.eunsun.travel_mate.component.MailComponent;
 import com.eunsun.travel_mate.domain.User;
+import com.eunsun.travel_mate.dto.request.FindPasswordRequestDto;
 import com.eunsun.travel_mate.dto.request.FindUserEmailRequestDto;
 import com.eunsun.travel_mate.dto.request.SignupRequestDto;
 import com.eunsun.travel_mate.dto.request.UserNameUpdateRequestDto;
@@ -18,10 +20,12 @@ import com.eunsun.travel_mate.util.RandomUtil;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.mail.MailSendException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Slf4j
@@ -30,7 +34,7 @@ public class UserService {
 
   private final UserRepository userRepository;
   private final PasswordEncoder passwordEncoder;
-  private final MailService mailService;
+  private final MailComponent mailComponent;
   private final JwtTokenProvider jwtTokenProvider;
 
   // 이메일 중복 확인
@@ -38,7 +42,7 @@ public class UserService {
     return userRepository.existsByEmail(email);
   }
 
-  // 인증 코드 생성
+  // 인증 코드 생성 : 이메일로 전송 될 인증 코드
   public String generateVerificationCode() {
     return RandomUtil.generateRandomCode();
   }
@@ -46,7 +50,7 @@ public class UserService {
   // 인증 코드 전송
   public boolean sendVerificationCode(String email, String verificationCode) {
     try {
-      mailService.sendVerificationEmail(email, verificationCode);
+      mailComponent.sendVerificationEmail(email, verificationCode);
       return true;
 
     } catch (Exception e) {
@@ -181,6 +185,30 @@ public class UserService {
       return FindUserEmailResponseDto.createFindUserEmailResponse(user.getName(), user.getEmail());
     } else {
       throw new UserNotFoundException("이메일을 찾을 수 없습니다.");
+    }
+  }
+
+  @Transactional
+  // 임시 비밀번호 생성 후 update -> 이메일로 전송
+  public void findUserPassword(FindPasswordRequestDto findPasswordRequestDto) {
+
+    // 이메일로 사용자 조회
+    User user = userRepository.findByEmail(findPasswordRequestDto.getEmail())
+        .orElseThrow(() -> new UserNotFoundException("사용자를 찾을 수 없습니다."));
+
+    try {
+      // 임시 비밀번호 생성
+      String temporaryPassword = RandomUtil.generateTemporaryPassword();
+
+      // 임시 비밀번호 저장
+      user.setPassword(passwordEncoder.encode(temporaryPassword));
+      userRepository.save(user);
+      log.info("임시 비밀번호 발급 및 이메일 전송 완료");
+
+      // 메일 전송
+      mailComponent.sendTemporaryPasswordEmail(user.getEmail(), temporaryPassword);
+    } catch (Exception e) {
+      throw new MailSendException("이메일 전송에 실패했습니다.", e);
     }
   }
 }

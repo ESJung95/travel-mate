@@ -1,6 +1,7 @@
 package com.eunsun.travel_mate.controller;
 
 import com.eunsun.travel_mate.dto.request.EmailVerificationRequestDto;
+import com.eunsun.travel_mate.dto.request.FindPasswordRequestDto;
 import com.eunsun.travel_mate.dto.request.FindUserEmailRequestDto;
 import com.eunsun.travel_mate.dto.request.LoginRequestDto;
 import com.eunsun.travel_mate.dto.request.SignupRequestDto;
@@ -24,6 +25,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mail.MailSendException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.Authentication;
 import org.springframework.validation.BindingResult;
@@ -258,4 +260,21 @@ public class UserController {
     }
   }
 
+  // 이메일로 임시 비밀번호 발급
+  @PostMapping("/find/password")
+  public ResponseEntity<?> findUserPassword(@Valid @RequestBody FindPasswordRequestDto findPasswordRequestDto) {
+    try {
+      userService.findUserPassword(findPasswordRequestDto);
+      return ResponseEntity.ok("임시 비밀번호 발급 성공");
+
+    } catch (UserNotFoundException e) {
+      return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+
+    } catch (MailSendException e) {
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("이메일 전송에 실패했습니다.");
+
+    } catch (Exception e) {
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("임시 비밀번호 발급에 실패했습니다.");
+    }
+  }
 }
