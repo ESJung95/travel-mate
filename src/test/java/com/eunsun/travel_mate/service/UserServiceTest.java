@@ -16,6 +16,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.eunsun.travel_mate.component.MailComponent;
 import com.eunsun.travel_mate.domain.User;
 import com.eunsun.travel_mate.dto.request.SignupRequestDto;
 import com.eunsun.travel_mate.dto.response.LoginResponseDto;
@@ -44,7 +45,7 @@ class UserServiceTest {
   private UserRepository userRepository;
 
   @Mock
-  private MailService mailService;
+  private MailComponent mailComponent;
 
   @Mock
   private PasswordEncoder passwordEncoder;
@@ -130,7 +131,7 @@ class UserServiceTest {
 
     // then
     assertTrue(result);
-    verify(mailService, times(1)).sendVerificationEmail(eq(email), eq(verificationCode));
+    verify(mailComponent, times(1)).sendVerificationEmail(eq(email), eq(verificationCode));
   }
 
   @Test
@@ -140,14 +141,14 @@ class UserServiceTest {
     // given
     String email = "test@example.com";
     String verificationCode = "123456";
-    doThrow(new RuntimeException("메일 전송 오류")).when(mailService).sendVerificationEmail(email, verificationCode);
+    doThrow(new RuntimeException("메일 전송 오류")).when(mailComponent).sendVerificationEmail(email, verificationCode);
 
     // when
     boolean result = userService.sendVerificationCode(email, verificationCode);
 
     // then
     assertFalse(result);
-    verify(mailService, times(1)).sendVerificationEmail(eq(email), eq(verificationCode));
+    verify(mailComponent, times(1)).sendVerificationEmail(eq(email), eq(verificationCode));
   }
 
   @Test
