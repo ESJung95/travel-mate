@@ -6,6 +6,8 @@ import com.eunsun.travel_mate.dto.request.SignupRequestDto;
 import com.eunsun.travel_mate.dto.request.TokenBlacklistRequestDto;
 import com.eunsun.travel_mate.dto.response.LoginResponseDto;
 import com.eunsun.travel_mate.dto.response.SignupResponseDto;
+import com.eunsun.travel_mate.dto.response.UserResponseDto;
+import com.eunsun.travel_mate.exception.UserNotFoundException;
 import com.eunsun.travel_mate.security.JwtTokenProvider;
 import com.eunsun.travel_mate.service.TokenBlacklistService;
 import com.eunsun.travel_mate.service.UserService;
@@ -21,6 +23,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -161,10 +164,17 @@ public class UserController {
 
   // 회원 정보 조회
   @GetMapping("/{userId}")
-  public ResponseEntity<?> getUser() {
+  public ResponseEntity<?> getUser(@PathVariable Long userId) {
 
-    return ResponseEntity.ok("회원 정보 조회 성공");
+    try {
+      UserResponseDto userResponseDto = userService.getUserById(userId);
+      return ResponseEntity.ok(userResponseDto);
+    } catch (UserNotFoundException e) {
+      log.info("사용자 정보 조회 실패 : {}", userId, e);
+      return ResponseEntity.status(HttpStatus.NOT_FOUND).body("사용자를 찾을 수 없습니다.");
+    }
   }
+
   // 회원 정보 수정
   @PutMapping("/{userId}")
   public ResponseEntity<?> updateUser() {

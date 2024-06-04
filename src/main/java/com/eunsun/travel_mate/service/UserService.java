@@ -5,6 +5,8 @@ import com.eunsun.travel_mate.dto.request.SignupRequestDto;
 import com.eunsun.travel_mate.dto.response.LoginResponseDto;
 import com.eunsun.travel_mate.dto.response.SignupResponseDto;
 import com.eunsun.travel_mate.dto.response.TokenDetailDto;
+import com.eunsun.travel_mate.dto.response.UserResponseDto;
+import com.eunsun.travel_mate.exception.UserNotFoundException;
 import com.eunsun.travel_mate.repository.UserRepository;
 import com.eunsun.travel_mate.security.JwtTokenProvider;
 import com.eunsun.travel_mate.util.RandomUtil;
@@ -107,4 +109,15 @@ public class UserService {
     }
   }
 
+  // 사용자 정보 조회
+  public UserResponseDto getUserById(Long userId) {
+    User user = userRepository.findById(userId)
+        .orElseThrow(() -> new UserNotFoundException("사용자를 찾을 수 없습니다 : " + userId));
+
+    UserResponseDto userResponseDto = UserResponseDto.createUserResponse(user.getEmail(), user.getName(), user.getBirthdate());
+    log.info("사용자 ID 로 사용자 정보 조회 성공 : {}", userId);
+
+    return userResponseDto;
+
+  }
 }
