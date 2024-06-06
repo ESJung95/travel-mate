@@ -33,7 +33,7 @@ class AreaCodeServiceTest {
   @BeforeEach
   void setUp() {
     // AreaCodeService apiKey 설정
-    areaCodeService.apiKey = "testApiKey";
+    AreaCodeService.apiKey = "testApiKey";
   }
 
   @Test

@@ -25,7 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class AreaCodeService {
 
   @Value("${tour.openapi.key}")
-  String apiKey;
+  static String apiKey;
 
   private final AreaCodeRepository areaCodeRepository;
 
