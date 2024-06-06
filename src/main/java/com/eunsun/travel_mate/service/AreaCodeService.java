@@ -25,7 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class AreaCodeService {
 
   @Value("${tour.openapi.key}")
-  private String apiKey;
+  String apiKey;
 
   private final AreaCodeRepository areaCodeRepository;
 
@@ -72,7 +72,7 @@ public class AreaCodeService {
   }
 
   // OpenApi 에서 areaCode 데이터 가져오기
-  private String getAreaCodeString() {
+  public String getAreaCodeString() {
     String apiUrl =
         "https://apis.data.go.kr/B551011/KorService1/areaCode1?numOfRows=17&MobileOS=ETC&MobileApp=TEST&_type=json&serviceKey="
             + apiKey;
@@ -91,30 +91,29 @@ public class AreaCodeService {
         br = new BufferedReader(new InputStreamReader(connection.getErrorStream()));
       }
       String inputLine;
+
       StringBuilder response = new StringBuilder();
       while ((inputLine = br.readLine()) != null) {
         response.append(inputLine);
       }
 
       br.close();
-
-//      System.out.println(response.toString());
       return response.toString();
 
     } catch (Exception e) {
+      log.error("지역 코드 가져오기 실패", e);
       return "AreaCode 가져오기 실패";
     }
   }
 
     // 데이터 파싱하기
-    private List<AreaCode> parseAreaCode(String jsonString) {
+    public List<AreaCode> parseAreaCode(String jsonString) {
       List<AreaCode> areaCodes = new ArrayList<>();
 
       JSONParser jsonParser = new JSONParser();
-      JSONObject jsonObject;
 
       try {
-        jsonObject = (JSONObject) jsonParser.parse(jsonString);
+        JSONObject jsonObject = (JSONObject) jsonParser.parse(jsonString);
 
         JSONObject response = (JSONObject) jsonObject.get("response");
         JSONObject body = (JSONObject) response.get("body");
