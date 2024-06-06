@@ -27,7 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class TourInfoService {
 
   @Value("${tour.openapi.key}")
-  private String apiKey;
+  static String apiKey;
 
   private final TourInfoRepository tourInfoRepository;
 
@@ -80,7 +80,7 @@ public class TourInfoService {
 
 
   // OpenApi 에서 지역 여행 정보 데이터 가져오기
-  private String getTourInfoString(String areaCode, int pageNo, int numOfRows) {
+  public String getTourInfoString(String areaCode, int pageNo, int numOfRows) {
     // pageNo : 페이지번호 , numOfRows : 한페이지결과수
     String apiUrl =
         "https://apis.data.go.kr/B551011/KorService1/areaBasedList1?MobileOS=ETC&MobileApp=TEST&_type=json&areaCode="
@@ -122,7 +122,7 @@ public class TourInfoService {
   }
 
   // 데이터 파싱하기
-  private List<TourInfo> parseTourInfo(String jsonString, AreaCode areaCode) {
+  public List<TourInfo> parseTourInfo(String jsonString, AreaCode areaCode) {
     List<TourInfo> tourInfos = new ArrayList<>();
 
     JSONParser jsonParser = new JSONParser();
@@ -165,7 +165,7 @@ public class TourInfoService {
   }
 
   // totalCount 확인하고 나눠서 데이터 가져오기
-  private List<TourInfo> getTourInfoByAreaCode(AreaCode areaCode) throws ParseException {
+  public List<TourInfo> getTourInfoByAreaCode(AreaCode areaCode) throws ParseException {
     List<TourInfo> tourInfos = new ArrayList<>();
     int pageNo = 1;
     int numOfRows = 10;
