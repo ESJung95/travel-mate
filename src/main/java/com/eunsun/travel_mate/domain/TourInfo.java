@@ -42,10 +42,10 @@ public class TourInfo {
   private String addr2;
 
   @Column(nullable = false)
-  private Long contentTypeId;
+  private String contentTypeId;
 
   @Column(nullable = false)
-  private Long contentId;
+  private String contentId;
 
   @Column(nullable = false)
   private String mapx;
@@ -58,10 +58,10 @@ public class TourInfo {
   private String imageUrl2;
 
   @Column(nullable = false)
-  private LocalDateTime createdTime;
+  private String createdTime;
 
   @Column(nullable = false)
-  private LocalDateTime modifiedTime;
+  private String modifiedTime;
 
   @CreationTimestamp
   @Column(updatable = false)
