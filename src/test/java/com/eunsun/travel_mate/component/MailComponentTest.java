@@ -1,4 +1,4 @@
-package com.eunsun.travel_mate.service;
+package com.eunsun.travel_mate.component;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -15,13 +15,13 @@ import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 
 @ExtendWith(MockitoExtension.class)
-public class MailServiceTest {
+public class MailComponentTest {
 
   @Mock
   private JavaMailSender mailSender;
 
   @InjectMocks
-  private MailService mailService;
+  private MailComponent mailComponent;
 
   @Test
   @DisplayName("인증 메일로 전송 테스트")
@@ -32,10 +32,26 @@ public class MailServiceTest {
     String text = "Test Text";
 
     // when
-    mailService.sendEmail(to, subject, text);
+    mailComponent.sendEmail(to, subject, text);
 
     // then
     verify(mailSender).send(createExpectedMessage(to, subject, text));
+  }
+
+  @Test
+  @DisplayName("임시 비밀번호 메일 전송 테스트")
+  public void testSendTemporaryPasswordEmail() {
+    // given
+    String to = "test@example.com";
+    String temporaryPassword = "temp1234";
+    String expectedSubject = "Travel Mate 임시 비밀번호";
+    String expectedText = "임시 비밀번호: " + temporaryPassword;
+
+    // when
+    mailComponent.sendTemporaryPasswordEmail(to, temporaryPassword);
+
+    // then
+    verify(mailSender).send(createExpectedMessage(to, expectedSubject, expectedText));
   }
 
   @Test
@@ -51,7 +67,7 @@ public class MailServiceTest {
     // when
     RuntimeException thrownException = null;
     try {
-      mailService.sendEmail(to, subject, text);
+      mailComponent.sendEmail(to, subject, text);
     } catch (RuntimeException e) {
       thrownException = e;
     }
@@ -72,7 +88,7 @@ public class MailServiceTest {
     String expectedText = "인증 코드: " + verificationCode;
 
     // when
-    mailService.sendVerificationEmail(to, verificationCode);
+    mailComponent.sendVerificationEmail(to, verificationCode);
 
     // then
     verify(mailSender).send(createExpectedMessage(to, expectedSubject, expectedText));
@@ -85,4 +101,6 @@ public class MailServiceTest {
     message.setText(text);
     return message;
   }
+
+
 }

@@ -27,7 +27,7 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class JwtTokenProvider {
 
-  private static final long TOKEN_EXPIRE_TIME = 1000 * 60; // 1H : 1000 * 60 * 60
+  private static final long TOKEN_EXPIRE_TIME = 1000 * 60 * 60; // 1H
   private static final String KEY_ROLE = "role";
 
   @Value("${jwt.secret.key}")

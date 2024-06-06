@@ -1,11 +1,19 @@
 package com.eunsun.travel_mate.controller;
 
 import com.eunsun.travel_mate.dto.request.EmailVerificationRequestDto;
+import com.eunsun.travel_mate.dto.request.FindPasswordRequestDto;
+import com.eunsun.travel_mate.dto.request.FindUserEmailRequestDto;
 import com.eunsun.travel_mate.dto.request.LoginRequestDto;
 import com.eunsun.travel_mate.dto.request.SignupRequestDto;
 import com.eunsun.travel_mate.dto.request.TokenBlacklistRequestDto;
+import com.eunsun.travel_mate.dto.request.UserNameUpdateRequestDto;
+import com.eunsun.travel_mate.dto.request.UserPasswordUpdateRequestDto;
+import com.eunsun.travel_mate.dto.response.FindUserEmailResponseDto;
 import com.eunsun.travel_mate.dto.response.LoginResponseDto;
 import com.eunsun.travel_mate.dto.response.SignupResponseDto;
+import com.eunsun.travel_mate.dto.response.UserNameUpdateResponseDto;
+import com.eunsun.travel_mate.dto.response.UserResponseDto;
+import com.eunsun.travel_mate.exception.UserNotFoundException;
 import com.eunsun.travel_mate.security.JwtTokenProvider;
 import com.eunsun.travel_mate.service.TokenBlacklistService;
 import com.eunsun.travel_mate.service.UserService;
@@ -17,10 +25,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mail.MailSendException;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.Authentication;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -161,21 +172,109 @@ public class UserController {
 
   // 회원 정보 조회
   @GetMapping("/{userId}")
-  public ResponseEntity<?> getUser() {
+  public ResponseEntity<?> getUser(@PathVariable Long userId) {
 
-    return ResponseEntity.ok("회원 정보 조회 성공");
+    try {
+      UserResponseDto userResponseDto = userService.getUserById(userId);
+      return ResponseEntity.ok(userResponseDto);
+    } catch (UserNotFoundException e) {
+      log.info("사용자 정보 조회 실패 : {}", userId, e);
+      return ResponseEntity.status(HttpStatus.NOT_FOUND).body("사용자를 찾을 수 없습니다.");
+    }
   }
-  // 회원 정보 수정
-  @PutMapping("/{userId}")
-  public ResponseEntity<?> updateUser() {
 
-    return ResponseEntity.ok("회원 정보 수정");
+  // 회원 정보 수정 - 이름
+  @PutMapping("/{userId}/name")
+  public ResponseEntity<?> updateUserName(@PathVariable Long userId,
+      @RequestBody @Valid UserNameUpdateRequestDto userNameUpdateRequestDto) {
+
+    try {
+      UserNameUpdateResponseDto userNameUpdateResponseDto = userService.updateUserName(userId,
+          userNameUpdateRequestDto);
+      return ResponseEntity.ok(userNameUpdateResponseDto);
+
+    } catch (UserNotFoundException e) { // 사용자 조회 실패
+      log.info("사용자 정보 조회 실패 : {}", userId, e);
+      return ResponseEntity.status(HttpStatus.NOT_FOUND).body("사용자를 찾을 수 없습니다.");
+
+    } catch (Exception e) { // 업데이트 실패
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("사용자 이름 변경 중 오류가 발생했습니다.");
+    }
+  }
+
+  // 회원 정보 수정 - 비밀번호
+  @PutMapping("/{userId}/password")
+  public ResponseEntity<?> updateUserPassword(@PathVariable Long userId,
+      @RequestBody @Valid UserPasswordUpdateRequestDto userPasswordUpdateRequestDto) {
+
+    try {
+      userService.updateUserPassword(userId, userPasswordUpdateRequestDto);
+      return ResponseEntity.ok("회원 정보 수정 완료");
+
+    } catch (UserNotFoundException e) { // 사용자 조회 실패
+      log.info("사용자 정보 조회 실패 : {}", userId, e);
+      return ResponseEntity.status(HttpStatus.NOT_FOUND).body("사용자를 찾을 수 없습니다.");
+
+    } catch (BadCredentialsException e) { // 현재 비밀번호 인증 실패
+      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
+
+    } catch (IllegalArgumentException e) { // 새로운 비밀번호 확인 실패, 변경할 비빌번호는 현재 비밀번호와 다른지
+      return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+
+    } catch (Exception e) { // 업데이트 실패
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("비밀번호 변경 중 오류가 발생했습니다.");
+    }
   }
 
   // 회원 정보 삭제
   @DeleteMapping("/{userId}")
-  public ResponseEntity<?> deleteUser() {
+  public ResponseEntity<?> deleteUser(@PathVariable Long userId) {
 
-    return ResponseEntity.ok("회원 탈퇴 성공");
+    try {
+      userService.deleteUser(userId);
+      return ResponseEntity.ok("회원 정보 삭제 성공");
+
+    } catch (UserNotFoundException e) { // 사용자 조회 실패
+      log.info("사용자 정보 조회 실패 : {}", userId, e);
+      return ResponseEntity.status(HttpStatus.NOT_FOUND).body("사용자를 찾을 수 없습니다.");
+
+    } catch (Exception e) { // 삭제 실패
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("사용자 삭제 중 오류가 발생했습니다.");
+    }
+  }
+
+  // 이름과 생년월일로 User 이메일 찾기
+  @GetMapping("/find/email")
+  public ResponseEntity<?> findUserEmail(@Valid @RequestBody FindUserEmailRequestDto findUserEmailRequestDto) {
+
+    try {
+      FindUserEmailResponseDto findUserEmailResponseDto = userService.findUserEmail(
+          findUserEmailRequestDto);
+      return ResponseEntity.ok(findUserEmailResponseDto);
+
+    } catch (UserNotFoundException e) {
+      return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+
+    } catch (Exception e) {
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("서버 오류가 발생했습니다.");
+    }
+  }
+
+  // 이메일로 임시 비밀번호 발급
+  @PostMapping("/find/password")
+  public ResponseEntity<?> findUserPassword(@Valid @RequestBody FindPasswordRequestDto findPasswordRequestDto) {
+    try {
+      userService.findUserPassword(findPasswordRequestDto);
+      return ResponseEntity.ok("임시 비밀번호 발급 성공");
+
+    } catch (UserNotFoundException e) {
+      return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+
+    } catch (MailSendException e) {
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("이메일 전송에 실패했습니다.");
+
+    } catch (Exception e) {
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("임시 비밀번호 발급에 실패했습니다.");
+    }
   }
 }
