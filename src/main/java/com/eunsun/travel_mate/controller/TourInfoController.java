@@ -3,6 +3,7 @@ package com.eunsun.travel_mate.controller;
 import com.eunsun.travel_mate.service.TourInfoService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.json.simple.parser.ParseException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -17,6 +18,13 @@ import org.springframework.web.bind.annotation.RestController;
 public class TourInfoController {
 
   private final TourInfoService tourInfoService;
+
+  // 여행 정보 전체 조회
+  @GetMapping
+  public ResponseEntity<?> getTourInfoFromApi() throws ParseException {
+    tourInfoService.getTourInfoFromApi();
+    return ResponseEntity.ok("성공");
+  }
 
   // 위치 정보를 기준으로 여행 정보 조회 -> 현재 위치, 설정 주소
   @GetMapping("/location")
