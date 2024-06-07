@@ -1,9 +1,11 @@
-package com.eunsun.travel_mate.service;
+package com.eunsun.travel_mate.service.tourinfo;
 
 import com.eunsun.travel_mate.domain.AreaCode;
-import com.eunsun.travel_mate.domain.TourInfo;
-import com.eunsun.travel_mate.repository.AreaCodeRepository;
-import com.eunsun.travel_mate.repository.TourInfoRepository;
+import com.eunsun.travel_mate.domain.tourInfo.TourInfo;
+import com.eunsun.travel_mate.domain.tourInfo.TourInfoDocument;
+import com.eunsun.travel_mate.repository.elasticsearch.TourInfoSearchRepository;
+import com.eunsun.travel_mate.repository.jpa.AreaCodeRepository;
+import com.eunsun.travel_mate.repository.jpa.TourInfoRepository;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
@@ -26,13 +28,28 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class TourInfoService {
 
+  public static String apiKeyTest;
+
   @Value("${tour.openapi.key}")
-  static String apiKey;
+  private String apiKey;
 
   private final TourInfoRepository tourInfoRepository;
 
   private final AreaCodeRepository areaCodeRepository;
 
+  private final TourInfoSearchRepository tourInfoSearchRepository;
+
+  // 여행지명을 검색
+  public List<TourInfoDocument> searchByTitle(String keyword) {
+    return tourInfoSearchRepository.findByTitleContaining(keyword);
+  }
+
+  // 주소로 검색
+  public List<TourInfoDocument> searchByAddress(String addr) {
+    return tourInfoSearchRepository.findByAddr1ContainingOrAddr2Containing(addr, addr);
+  }
+
+  // 매달 지역별 여행 정보 확인
   @Transactional
   @Scheduled(cron = "0 0 0 1 * *") // 매월 1일에 실행
   public void checkAndUpdateTourInfos() {

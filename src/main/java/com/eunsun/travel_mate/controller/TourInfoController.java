@@ -1,6 +1,8 @@
 package com.eunsun.travel_mate.controller;
 
-import com.eunsun.travel_mate.service.TourInfoService;
+import com.eunsun.travel_mate.domain.tourInfo.TourInfoDocument;
+import com.eunsun.travel_mate.service.tourinfo.TourInfoService;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.json.simple.parser.ParseException;
@@ -36,11 +38,18 @@ public class TourInfoController {
     return ResponseEntity.ok("위치 정보로 여행 정보 조회 성공");
   }
 
-  // 키워드로 여행 정보 조회
-  @GetMapping("/keyword")
-  public ResponseEntity<?> getTourInfoByKeyword(@RequestParam String keyword) {
+  // 제목으로 검색
+  @GetMapping("/search/title")
+  public ResponseEntity<List<TourInfoDocument>> searchByTitle(@RequestParam String keyword) {
+    List<TourInfoDocument> searchResults = tourInfoService.searchByTitle(keyword);
+    return ResponseEntity.ok(searchResults);
+  }
 
-    return ResponseEntity.ok("키워드로 여행 정보 조회 성공");
+  // 주소로 검색
+  @GetMapping("/search/address")
+  public ResponseEntity<List<TourInfoDocument>> searchByAddress(@RequestParam String addr) {
+    List<TourInfoDocument> searchResults = tourInfoService.searchByAddress(addr);
+    return ResponseEntity.ok(searchResults);
   }
 
   // 관광지 상세 정보 조회 -> contentId
