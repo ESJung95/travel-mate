@@ -1,6 +1,6 @@
 package com.eunsun.travel_mate.service;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
@@ -8,7 +8,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.eunsun.travel_mate.domain.AreaCode;
-import com.eunsun.travel_mate.repository.AreaCodeRepository;
+import com.eunsun.travel_mate.repository.jpa.AreaCodeRepository;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
@@ -33,7 +33,7 @@ class AreaCodeServiceTest {
   @BeforeEach
   void setUp() {
     // AreaCodeService apiKey 설정
-    AreaCodeService.apiKey = "testApiKey";
+    AreaCodeService.apiKeyTest = "testApiKey";
   }
 
   @Test

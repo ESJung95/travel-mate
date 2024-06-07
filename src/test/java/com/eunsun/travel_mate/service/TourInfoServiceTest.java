@@ -7,9 +7,10 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.eunsun.travel_mate.domain.AreaCode;
-import com.eunsun.travel_mate.domain.TourInfo;
-import com.eunsun.travel_mate.repository.AreaCodeRepository;
-import com.eunsun.travel_mate.repository.TourInfoRepository;
+import com.eunsun.travel_mate.domain.tourInfo.TourInfo;
+import com.eunsun.travel_mate.repository.jpa.AreaCodeRepository;
+import com.eunsun.travel_mate.repository.jpa.TourInfoRepository;
+import com.eunsun.travel_mate.service.tourinfo.TourInfoService;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -39,7 +40,7 @@ class TourInfoServiceTest {
   @BeforeEach
   void setUp() {
     // TourInfoService apiKey 설정
-    TourInfoService.apiKey = "testApiKey";
+    TourInfoService.apiKeyTest = "testApiKey";
   }
 
   @Test
