@@ -1,4 +1,4 @@
-package com.eunsun.travel_mate.repository;
+package com.eunsun.travel_mate.repository.jpa;
 
 import com.eunsun.travel_mate.domain.Plan;
 import org.springframework.data.jpa.repository.JpaRepository;
