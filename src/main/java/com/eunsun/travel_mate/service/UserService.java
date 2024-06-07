@@ -14,7 +14,7 @@ import com.eunsun.travel_mate.dto.response.TokenDetailDto;
 import com.eunsun.travel_mate.dto.response.UserNameUpdateResponseDto;
 import com.eunsun.travel_mate.dto.response.UserResponseDto;
 import com.eunsun.travel_mate.exception.UserNotFoundException;
-import com.eunsun.travel_mate.repository.UserRepository;
+import com.eunsun.travel_mate.repository.jpa.UserRepository;
 import com.eunsun.travel_mate.security.JwtTokenProvider;
 import com.eunsun.travel_mate.util.RandomUtil;
 import java.util.Optional;

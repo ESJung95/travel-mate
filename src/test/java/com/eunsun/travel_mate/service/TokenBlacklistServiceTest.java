@@ -8,7 +8,7 @@ import static org.mockito.Mockito.when;
 
 import com.eunsun.travel_mate.domain.TokenBlacklist;
 import com.eunsun.travel_mate.dto.request.TokenBlacklistRequestDto;
-import com.eunsun.travel_mate.repository.TokenBlacklistRepository;
+import com.eunsun.travel_mate.repository.jpa.TokenBlacklistRepository;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;

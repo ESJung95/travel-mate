@@ -1,5 +1,6 @@
 package com.eunsun.travel_mate.domain;
 
+import com.eunsun.travel_mate.domain.tourInfo.TourInfo;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;

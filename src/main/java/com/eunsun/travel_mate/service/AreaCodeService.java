@@ -1,7 +1,7 @@
 package com.eunsun.travel_mate.service;
 
 import com.eunsun.travel_mate.domain.AreaCode;
-import com.eunsun.travel_mate.repository.AreaCodeRepository;
+import com.eunsun.travel_mate.repository.jpa.AreaCodeRepository;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
@@ -24,8 +24,10 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class AreaCodeService {
 
+  public static String apiKeyTest;
+
   @Value("${tour.openapi.key}")
-  static String apiKey;
+  private String apiKey;
 
   private final AreaCodeRepository areaCodeRepository;
 
