@@ -1,5 +1,6 @@
-package com.eunsun.travel_mate.domain;
+package com.eunsun.travel_mate.domain.tourInfo;
 
+import com.eunsun.travel_mate.domain.AreaCode;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
