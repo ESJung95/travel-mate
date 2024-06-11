@@ -24,9 +24,6 @@ public class TourInfoDocument {
   private Long id;
 
   @Field(type = FieldType.Keyword)
-  private String areaCodeName;
-
-  @Field(type = FieldType.Keyword)
   private String areaCode;
 
   @Field(type = FieldType.Keyword)
