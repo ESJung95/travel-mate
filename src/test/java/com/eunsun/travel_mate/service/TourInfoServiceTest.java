@@ -15,7 +15,6 @@ import com.eunsun.travel_mate.domain.tourInfo.TourInfoDocument;
 import com.eunsun.travel_mate.repository.elasticsearch.TourInfoDocumentRepository;
 import com.eunsun.travel_mate.repository.jpa.AreaCodeRepository;
 import com.eunsun.travel_mate.repository.jpa.TourInfoRepository;
-import com.eunsun.travel_mate.service.tourinfo.TourInfoService;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;

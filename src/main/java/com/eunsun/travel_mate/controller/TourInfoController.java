@@ -1,7 +1,7 @@
 package com.eunsun.travel_mate.controller;
 
 import com.eunsun.travel_mate.domain.tourInfo.TourInfoDocument;
-import com.eunsun.travel_mate.service.tourinfo.TourInfoService;
+import com.eunsun.travel_mate.service.TourInfoService;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

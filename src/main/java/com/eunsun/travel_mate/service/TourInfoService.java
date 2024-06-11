@@ -1,4 +1,4 @@
-package com.eunsun.travel_mate.service.tourinfo;
+package com.eunsun.travel_mate.service;
 
 import com.eunsun.travel_mate.domain.AreaCode;
 import com.eunsun.travel_mate.domain.tourInfo.TourInfo;
