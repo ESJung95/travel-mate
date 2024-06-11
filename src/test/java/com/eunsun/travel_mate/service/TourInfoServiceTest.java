@@ -1,20 +1,17 @@
 package com.eunsun.travel_mate.service;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.eunsun.travel_mate.domain.AreaCode;
-import com.eunsun.travel_mate.domain.tourInfo.TourInfo;
+import com.eunsun.travel_mate.domain.tourInfo.TourInfoDocument;
+import com.eunsun.travel_mate.repository.elasticsearch.TourInfoDocumentRepository;
 import com.eunsun.travel_mate.repository.jpa.AreaCodeRepository;
 import com.eunsun.travel_mate.repository.jpa.TourInfoRepository;
 import com.eunsun.travel_mate.service.tourinfo.TourInfoService;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import org.json.simple.parser.ParseException;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -23,6 +20,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 
 @ExtendWith(MockitoExtension.class)
 class TourInfoServiceTest {
@@ -32,6 +30,12 @@ class TourInfoServiceTest {
 
   @Mock
   private AreaCodeRepository areaCodeRepository;
+
+  @Mock
+  private TourInfoDocumentRepository tourInfoDocumentRepository;
+
+  @Mock
+  private ElasticsearchOperations elasticsearchOperations;
 
   @Spy
   @InjectMocks
@@ -44,86 +48,48 @@ class TourInfoServiceTest {
   }
 
   @Test
-  @DisplayName("지역별 여행 정보 데이터 업데이트 테스트")
-  void checkAndUpdateTourInfos() throws Exception {
+  @DisplayName("여행지명 검색 테스트")
+  void searchByTitle() {
     // given
-    List<TourInfo> existingTourInfos = new ArrayList<>();
+    List<TourInfoDocument> expectedDocuments = new ArrayList<>();
+    TourInfoDocument doc1 = new TourInfoDocument();
+    doc1.setTitle("Seoul Tower");
+    expectedDocuments.add(doc1);
 
-    TourInfo tourInfo1 = new TourInfo();
-    tourInfo1.setContentId("1");
-    tourInfo1.setTitle("Tour 1");
+    TourInfoDocument doc2 = new TourInfoDocument();
+    doc2.setTitle("Seoul Palace");
+    expectedDocuments.add(doc2);
 
-    TourInfo tourInfo2 = new TourInfo();
-    tourInfo2.setContentId("2");
-    tourInfo2.setTitle("Tour 2");
-
-    existingTourInfos.add(tourInfo1);
-    existingTourInfos.add(tourInfo2);
-
-    List<TourInfo> newTourInfos = new ArrayList<>(existingTourInfos);
-
-    TourInfo tourInfo3 = new TourInfo();
-    tourInfo3.setContentId("3");
-    tourInfo3.setTitle("Tour 3");
-    newTourInfos.add(tourInfo3);
-
-    when(tourInfoRepository.findAll()).thenReturn(existingTourInfos);
-
-    doReturn(newTourInfos).when(tourInfoService).getTourInfoByAreaCode(any(AreaCode.class));
-    when(areaCodeRepository.findAll()).thenReturn(Collections.singletonList(new AreaCode()));
+    when(tourInfoDocumentRepository.findByTitleContaining("Seoul")).thenReturn(expectedDocuments);
 
     // when
-    tourInfoService.checkAndUpdateTourInfos();
+    List<TourInfoDocument> actualDocuments = tourInfoService.searchByTitle("Seoul");
 
     // then
-    verify(tourInfoRepository, times(1)).deleteAll();
-    verify(tourInfoRepository, times(1)).saveAll(newTourInfos);
+    verify(tourInfoDocumentRepository, times(1)).findByTitleContaining("Seoul");
+    Assertions.assertEquals(expectedDocuments, actualDocuments);
   }
 
   @Test
-  @DisplayName("OpenApi 에서 지역별 여행 정보 데이터 가져오기 테스트")
-  void getTourInfoFromApi() throws ParseException {
+  @DisplayName("주소로 여행지 검색 테스트")
+  void searchByAddress() {
     // given
-    List<AreaCode> areaCodes = new ArrayList<>();
-    AreaCode areaCode1 = new AreaCode();
-    areaCode1.setCode("1");
-    areaCode1.setName("서울");
+    List<TourInfoDocument> expectedDocuments = new ArrayList<>();
+    TourInfoDocument doc1 = new TourInfoDocument();
+    doc1.setAddr1("123 Seoul Street");
+    expectedDocuments.add(doc1);
 
-    AreaCode areaCode2 = new AreaCode();
-    areaCode2.setCode("2");
-    areaCode2.setName("부산");
+    TourInfoDocument doc2 = new TourInfoDocument();
+    doc2.setAddr2("456 Seoul Avenue");
+    expectedDocuments.add(doc2);
 
-    areaCodes.add(areaCode1);
-    areaCodes.add(areaCode2);
-
-    List<TourInfo> tourInfosSeoul = new ArrayList<>();
-    TourInfo tourInfo1 = new TourInfo();
-    tourInfo1.setContentId("1");
-    tourInfo1.setTitle("Tour 1");
-    tourInfo1.setAreaCode(areaCode1);
-
-    tourInfosSeoul.add(tourInfo1);
-
-    List<TourInfo> tourInfosBusan = new ArrayList<>();
-    TourInfo tourInfo2 = new TourInfo();
-    tourInfo2.setContentId("2");
-    tourInfo2.setTitle("Tour 2");
-    tourInfo2.setAreaCode(areaCode2);
-
-    tourInfosBusan.add(tourInfo2);
-
-    List<TourInfo> allTourInfos = new ArrayList<>();
-    allTourInfos.addAll(tourInfosSeoul);
-    allTourInfos.addAll(tourInfosBusan);
-
-    when(areaCodeRepository.findAll()).thenReturn(areaCodes);
-    doReturn(tourInfosSeoul).when(tourInfoService).getTourInfoByAreaCode(areaCode1);
-    doReturn(tourInfosBusan).when(tourInfoService).getTourInfoByAreaCode(areaCode2);
+    when(tourInfoDocumentRepository.findByAddr1ContainingOrAddr2Containing("Seoul", "Seoul")).thenReturn(expectedDocuments);
 
     // when
-    tourInfoService.getTourInfoFromApi();
+    List<TourInfoDocument> actualDocuments = tourInfoService.searchByAddress("Seoul");
 
     // then
-    verify(tourInfoRepository, times(1)).saveAll(allTourInfos);
+    verify(tourInfoDocumentRepository, times(1)).findByAddr1ContainingOrAddr2Containing("Seoul", "Seoul");
+    Assertions.assertEquals(expectedDocuments, actualDocuments);
   }
 }
