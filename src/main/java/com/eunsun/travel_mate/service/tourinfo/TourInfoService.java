@@ -12,7 +12,6 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -58,28 +57,20 @@ public class TourInfoService {
         List<TourInfo> newTourInfoList = parseTourInfo(tourInfoString, areaCode);
 
         for (TourInfo newTourInfo : newTourInfoList) {
-          Optional<TourInfo> existingTourInfo = tourInfoRepository.findById(newTourInfo.getTourInfoId());
+          TourInfo existingTourInfo = tourInfoRepository.findById(newTourInfo.getTourInfoId())
+              .orElseThrow(() -> new RuntimeException("TourInfo not found"));
 
-          if (existingTourInfo.isPresent()) {
-            TourInfo tourInfo = existingTourInfo.get();
-            String existingModifiedTime = tourInfo.getModifiedTime();
-            String newModifiedTime = newTourInfo.getModifiedTime();
+          String existingModifiedTime = existingTourInfo.getModifiedTime();
+          String newModifiedTime = newTourInfo.getModifiedTime();
 
-            if (!existingModifiedTime.equals(newModifiedTime)) {
-              TourInfo updatedTourInfo = tourInfo.update(newTourInfo);
-              tourInfoRepository.save(updatedTourInfo);
+          // ModifiedTime 이 변경된 경우만 update
+          if (!existingModifiedTime.equals(newModifiedTime)) {
+            TourInfo updatedTourInfo = existingTourInfo.update(newTourInfo);
+            tourInfoRepository.save(updatedTourInfo);
 
-              IndexQuery indexQuery = new IndexQueryBuilder()
-                  .withId(tourInfo.getTourInfoId().toString())
-                  .withObject(TourInfoDocument.from(updatedTourInfo))
-                  .build();
-              elasticsearchOperations.index(indexQuery, IndexCoordinates.of("tour_info"));
-            }
-          } else {
-            tourInfoRepository.save(newTourInfo);
             IndexQuery indexQuery = new IndexQueryBuilder()
-                .withId(newTourInfo.getTourInfoId().toString())
-                .withObject(TourInfoDocument.from(newTourInfo))
+                .withId(updatedTourInfo.getTourInfoId().toString())
+                .withObject(TourInfoDocument.from(updatedTourInfo))
                 .build();
             elasticsearchOperations.index(indexQuery, IndexCoordinates.of("tour_info"));
           }
