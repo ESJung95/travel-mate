@@ -24,7 +24,6 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class AreaCodeService {
 
-  public static String apiKeyTest;
 
   @Value("${tour.openapi.key}")
   private String apiKey;
@@ -47,13 +46,18 @@ public class AreaCodeService {
     // 기존 데이터와 비교하여 변경 사항 확인
     List<AreaCode> existingAreaCodes = areaCodeRepository.findAll();
 
-    if (!newAreaCodes.equals(existingAreaCodes)) {
-      log.info("지역 코드 변동 사항 존재");
+    boolean needsUpdate = false;
+    for (AreaCode newCode : newAreaCodes) {
+      if (!existingAreaCodes.contains(newCode)) {
+        needsUpdate = true;
+        break;
+      }
+    }
 
+    if (needsUpdate) {
       areaCodeRepository.deleteAll();
       areaCodeRepository.saveAll(newAreaCodes);
       log.info("지역 코드 업데이트 성공");
-
     } else {
       log.info("지역 코드 변동 사항 없음");
     }
@@ -100,6 +104,7 @@ public class AreaCodeService {
       }
 
       br.close();
+      log.info("Received JSON string: {}", response);
       return response.toString();
 
     } catch (Exception e) {
@@ -108,38 +113,35 @@ public class AreaCodeService {
     }
   }
 
-    // 데이터 파싱하기
-    public List<AreaCode> parseAreaCode(String jsonString) {
-      List<AreaCode> areaCodes = new ArrayList<>();
+  // 데이터 파싱하기
+  public List<AreaCode> parseAreaCode(String jsonString) {
+    List<AreaCode> areaCodes = new ArrayList<>();
 
+    try {
       JSONParser jsonParser = new JSONParser();
+      JSONObject jsonObject = (JSONObject) jsonParser.parse(jsonString);
+      JSONObject response = (JSONObject) jsonObject.get("response");
+      JSONObject body = (JSONObject) response.get("body");
+      JSONObject items = (JSONObject) body.get("items");
+      JSONArray itemArray = (JSONArray) items.get("item");
 
-      try {
-        JSONObject jsonObject = (JSONObject) jsonParser.parse(jsonString);
+      for (Object item : itemArray) {
+        JSONObject itemObject = (JSONObject) item;
+        String code = (String) itemObject.get("code");
+        String name = (String) itemObject.get("name");
 
-        JSONObject response = (JSONObject) jsonObject.get("response");
-        JSONObject body = (JSONObject) response.get("body");
-        JSONObject items = (JSONObject) body.get("items");
-        JSONArray itemArray = (JSONArray) items.get("item");
+        AreaCode areaCode = new AreaCode();
+        areaCode.setCode(code);
+        areaCode.setName(name);
 
-        for (Object item : itemArray) {
-          JSONObject itemObject = (JSONObject) item;
-          String code = (String) itemObject.get("code");
-          String name = (String) itemObject.get("name");
-
-          AreaCode areaCode = new AreaCode();
-          areaCode.setCode(code);
-          areaCode.setName(name);
-
-          areaCodes.add(areaCode);
-        }
-
-      } catch (ParseException e) {
-        throw new RuntimeException("AreaCode 데이터 파싱 실패", e);
+        areaCodes.add(areaCode);
       }
-
-      return areaCodes;
+    } catch (ParseException e) {
+      throw new RuntimeException("AreaCode 데이터 파싱 실패", e);
     }
+
+    return areaCodes;
+  }
 
 
 }
