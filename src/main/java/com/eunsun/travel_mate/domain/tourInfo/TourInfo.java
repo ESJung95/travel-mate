@@ -75,4 +75,24 @@ public class TourInfo {
   @UpdateTimestamp
   private LocalDateTime updatedAt;
 
+  public TourInfo update(TourInfo newTourInfo) {
+    return TourInfo.builder()
+        .tourInfoId(this.tourInfoId)
+        .areaCode(newTourInfo.getAreaCode())
+        .sigunguCode(newTourInfo.getSigunguCode())
+        .title(newTourInfo.getTitle())
+        .addr1(newTourInfo.getAddr1())
+        .addr2(newTourInfo.getAddr2())
+        .contentTypeId(newTourInfo.getContentTypeId())
+        .contentId(newTourInfo.getContentId())
+        .mapx(newTourInfo.getMapx())
+        .mapy(newTourInfo.getMapy())
+        .imageUrl1(newTourInfo.getImageUrl1())
+        .imageUrl2(newTourInfo.getImageUrl2())
+        .createdTime(this.createdTime)
+        .modifiedTime(newTourInfo.getModifiedTime())
+        .createdAt(this.createdAt)
+        .updatedAt(this.updatedAt)
+        .build();
+  }
 }

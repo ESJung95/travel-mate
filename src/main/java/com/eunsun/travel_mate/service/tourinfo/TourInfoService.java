@@ -12,6 +12,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,6 +25,7 @@ import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
 import org.springframework.data.elasticsearch.core.query.IndexQueryBuilder;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,8 +34,6 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class TourInfoService {
 
-  public static String apiKeyTest;
-
   @Value("${tour.openapi.key}")
   private String apiKey;
 
@@ -41,6 +41,61 @@ public class TourInfoService {
   private final TourInfoRepository tourInfoRepository;
   private final TourInfoDocumentRepository tourInfoDocumentRepository;
   private final ElasticsearchOperations elasticsearchOperations;
+
+  @Transactional
+  @Scheduled(cron = "0 0 0 1 * *") // 매월 1일에 실행
+  public void updateTourInfoMonthly() {
+    List<AreaCode> areaCodes = areaCodeRepository.findAll();
+
+    for (AreaCode areaCode : areaCodes) {
+      String code = areaCode.getCode();
+      int totalCount = getTotalCount(code);
+      int numOfRows = 1000;
+      int totalPages = (int) Math.ceil((double) totalCount / numOfRows);
+
+      for (int pageNo = 1; pageNo <= totalPages; pageNo++) {
+        String tourInfoString = getTourInfoString(code, pageNo, numOfRows);
+        List<TourInfo> newTourInfoList = parseTourInfo(tourInfoString, areaCode);
+
+        for (TourInfo newTourInfo : newTourInfoList) {
+          Optional<TourInfo> existingTourInfo = tourInfoRepository.findById(newTourInfo.getTourInfoId());
+
+          if (existingTourInfo.isPresent()) {
+            TourInfo tourInfo = existingTourInfo.get();
+            String existingModifiedTime = tourInfo.getModifiedTime();
+            String newModifiedTime = newTourInfo.getModifiedTime();
+
+            if (!existingModifiedTime.equals(newModifiedTime)) {
+              TourInfo updatedTourInfo = tourInfo.update(newTourInfo);
+              tourInfoRepository.save(updatedTourInfo);
+
+              IndexQuery indexQuery = new IndexQueryBuilder()
+                  .withId(tourInfo.getTourInfoId().toString())
+                  .withObject(TourInfoDocument.from(updatedTourInfo))
+                  .build();
+              elasticsearchOperations.index(indexQuery, IndexCoordinates.of("tour_info"));
+            }
+          } else {
+            tourInfoRepository.save(newTourInfo);
+            IndexQuery indexQuery = new IndexQueryBuilder()
+                .withId(newTourInfo.getTourInfoId().toString())
+                .withObject(TourInfoDocument.from(newTourInfo))
+                .build();
+            elasticsearchOperations.index(indexQuery, IndexCoordinates.of("tour_info"));
+          }
+        }
+
+        log.info("AreaCode: {}, Page: {}/{} 업데이트 및 인덱싱 완료", code, pageNo, totalPages);
+      }
+
+      try {
+        Thread.sleep(500);
+      } catch (InterruptedException e) {
+        log.warn("지연 시간 추가 실패", e);
+      }
+    }
+    log.info("모든 여행 정보 데이터 업데이트 완료");
+  }
 
   // 지역별 여행 정보 가져와서 DB에 저장하기
   @Transactional
