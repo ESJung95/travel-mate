@@ -1,12 +1,14 @@
 package com.eunsun.travel_mate.controller;
 
+import com.eunsun.travel_mate.domain.tourInfo.TourInfoDocument;
 import com.eunsun.travel_mate.service.TourInfoService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.json.simple.parser.ParseException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -19,34 +21,35 @@ public class TourInfoController {
 
   private final TourInfoService tourInfoService;
 
-  // 여행 정보 전체 조회
+  // OpenApi 에서 전체 정보 가져오기
   @GetMapping
-  public ResponseEntity<?> getTourInfoFromApi() throws ParseException {
+  public ResponseEntity<?> getTourInfoFromApi()  {
     tourInfoService.getTourInfoFromApi();
     return ResponseEntity.ok("성공");
   }
 
-  // 위치 정보를 기준으로 여행 정보 조회 -> 현재 위치, 설정 주소
-  @GetMapping("/location")
-  public ResponseEntity<?> getTourInfoByLocation(
-      @RequestParam double latitude,
-      @RequestParam double longitude,
-    @RequestParam(required = false) String address) {
-
-    return ResponseEntity.ok("위치 정보로 여행 정보 조회 성공");
+  // 제목으로 검색
+  @GetMapping("/search/title")
+  public ResponseEntity<Page<TourInfoDocument>> searchByTitle(
+      @RequestParam String keyword,
+      @RequestParam(defaultValue = "0") int page,
+      @RequestParam(defaultValue = "10") int size
+  ) {
+    Pageable pageable = PageRequest.of(page, size);
+    Page<TourInfoDocument> searchResults = tourInfoService.searchByTitle(keyword, pageable);
+    return ResponseEntity.ok(searchResults);
   }
 
-  // 키워드로 여행 정보 조회
-  @GetMapping("/keyword")
-  public ResponseEntity<?> getTourInfoByKeyword(@RequestParam String keyword) {
-
-    return ResponseEntity.ok("키워드로 여행 정보 조회 성공");
+  // 주소로 검색
+  @GetMapping("/search/address")
+  public ResponseEntity<Page<TourInfoDocument>> searchByAddress(
+      @RequestParam String addr,
+      @RequestParam(defaultValue = "0") int page,
+      @RequestParam(defaultValue = "10") int size
+  ) {
+    Pageable pageable = PageRequest.of(page, size);
+    Page<TourInfoDocument> searchResults = tourInfoService.searchByAddress(addr, pageable);
+    return ResponseEntity.ok(searchResults);
   }
 
-  // 관광지 상세 정보 조회 -> contentId
-  @GetMapping("/{contentId}")
-  public ResponseEntity<?> getTourInfoDetail(@PathVariable Long contentId) {
-
-    return ResponseEntity.ok("관광지 상세 정보 조회 성공");
-  }
 }

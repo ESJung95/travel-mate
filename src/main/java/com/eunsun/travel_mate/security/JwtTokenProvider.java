@@ -2,7 +2,7 @@ package com.eunsun.travel_mate.security;
 
 import com.eunsun.travel_mate.domain.User;
 import com.eunsun.travel_mate.dto.response.TokenDetailDto;
-import com.eunsun.travel_mate.repository.UserRepository;
+import com.eunsun.travel_mate.repository.jpa.UserRepository;
 import com.eunsun.travel_mate.service.TokenBlacklistService;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;

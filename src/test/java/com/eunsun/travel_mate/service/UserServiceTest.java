@@ -31,7 +31,7 @@ import com.eunsun.travel_mate.dto.response.TokenDetailDto;
 import com.eunsun.travel_mate.dto.response.UserNameUpdateResponseDto;
 import com.eunsun.travel_mate.dto.response.UserResponseDto;
 import com.eunsun.travel_mate.exception.UserNotFoundException;
-import com.eunsun.travel_mate.repository.UserRepository;
+import com.eunsun.travel_mate.repository.jpa.UserRepository;
 import com.eunsun.travel_mate.security.JwtTokenProvider;
 import java.time.LocalDate;
 import java.time.LocalDateTime;

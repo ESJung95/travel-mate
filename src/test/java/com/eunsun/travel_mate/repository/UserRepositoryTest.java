@@ -1,6 +1,7 @@
 package com.eunsun.travel_mate.repository;
 
 import com.eunsun.travel_mate.domain.User;
+import com.eunsun.travel_mate.repository.jpa.UserRepository;
 import java.time.LocalDate;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
