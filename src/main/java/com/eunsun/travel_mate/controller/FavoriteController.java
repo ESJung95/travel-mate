@@ -39,7 +39,8 @@ public class FavoriteController {
       return ResponseEntity.ok(favoriteResponse);
 
     } catch (Exception e) {
-      return ResponseEntity.badRequest().body("관심 여행지 추가 실패" + e.getMessage());
+      log.error("관심 여행지 추가 실패: {}", e.getMessage());
+      return ResponseEntity.badRequest().body("관심 여행지 추가 실패" );
     }
   }
 
@@ -53,7 +54,8 @@ public class FavoriteController {
       return ResponseEntity.ok().body(allFavorites);
 
     } catch (Exception e) {
-      return ResponseEntity.badRequest().body("관심 여행지 목록 조회 실패" + e.getMessage());
+      log.error("관심 여행지 목록 조회 실패: {}", e.getMessage());
+      return ResponseEntity.badRequest().body("관심 여행지 목록 조회 실패");
     }
   }
 
@@ -69,7 +71,8 @@ public class FavoriteController {
       return ResponseEntity.ok().body("관심 여행지 삭제 성공");
 
     } catch (Exception e) {
-      return ResponseEntity.badRequest().body("관심 여행지 삭제 실패: " + e.getMessage());
+      log.error("관심 여행지 삭제 실패: {}", e.getMessage());
+      return ResponseEntity.badRequest().body("관심 여행지 삭제 실패");
     }
   }
 
