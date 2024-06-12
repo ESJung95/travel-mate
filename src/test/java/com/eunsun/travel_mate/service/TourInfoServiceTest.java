@@ -27,6 +27,10 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
@@ -56,6 +60,7 @@ class TourInfoServiceTest {
     // AreaCodeService apiKey 설정
     ReflectionTestUtils.setField(tourInfoService, "apiKey", "testApiKey");
   }
+
   @Test
   @DisplayName("여행지명 검색 테스트")
   void searchByTitle() {
@@ -69,14 +74,17 @@ class TourInfoServiceTest {
     doc2.setTitle("Seoul Palace");
     expectedDocuments.add(doc2);
 
-    when(tourInfoDocumentRepository.findByTitleContaining("Seoul")).thenReturn(expectedDocuments);
+    Pageable pageable = PageRequest.of(0, 10);
+    Page<TourInfoDocument> expectedPage = new PageImpl<>(expectedDocuments, pageable, expectedDocuments.size());
+
+    when(tourInfoDocumentRepository.findByTitleContaining("Seoul", pageable)).thenReturn(expectedPage);
 
     // when
-    List<TourInfoDocument> actualDocuments = tourInfoService.searchByTitle("Seoul");
+    Page<TourInfoDocument> actualPage = tourInfoService.searchByTitle("Seoul", pageable);
 
     // then
-    verify(tourInfoDocumentRepository, times(1)).findByTitleContaining("Seoul");
-    Assertions.assertEquals(expectedDocuments, actualDocuments);
+    verify(tourInfoDocumentRepository, times(1)).findByTitleContaining("Seoul", pageable);
+    Assertions.assertEquals(expectedPage, actualPage);
   }
 
   @Test
@@ -92,15 +100,19 @@ class TourInfoServiceTest {
     doc2.setAddr2("456 Seoul Avenue");
     expectedDocuments.add(doc2);
 
-    when(tourInfoDocumentRepository.findByAddr1ContainingOrAddr2Containing("Seoul", "Seoul")).thenReturn(expectedDocuments);
+    Pageable pageable = PageRequest.of(0, 10);
+    Page<TourInfoDocument> expectedPage = new PageImpl<>(expectedDocuments, pageable, expectedDocuments.size());
+
+    when(tourInfoDocumentRepository.findByAddr1ContainingOrAddr2Containing("Seoul", "Seoul", pageable)).thenReturn(expectedPage);
 
     // when
-    List<TourInfoDocument> actualDocuments = tourInfoService.searchByAddress("Seoul");
+    Page<TourInfoDocument> actualPage = tourInfoService.searchByAddress("Seoul", pageable);
 
     // then
-    verify(tourInfoDocumentRepository, times(1)).findByAddr1ContainingOrAddr2Containing("Seoul", "Seoul");
-    Assertions.assertEquals(expectedDocuments, actualDocuments);
+    verify(tourInfoDocumentRepository, times(1)).findByAddr1ContainingOrAddr2Containing("Seoul", "Seoul", pageable);
+    Assertions.assertEquals(expectedPage, actualPage);
   }
+
 
   @Test
   @DisplayName("지역별 여행 정보 API에서 가져와서 저장하기 테스트")
