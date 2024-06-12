@@ -10,14 +10,14 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class FavoriteResponseDto {
+public class CreateFavoriteResponseDto {
 
   private Long tourInfoId;
   private String title;
   private String message;
 
-  public static FavoriteResponseDto from(Favorite favorite) {
-    return FavoriteResponseDto.builder()
+  public static CreateFavoriteResponseDto from(Favorite favorite) {
+    return CreateFavoriteResponseDto.builder()
         .tourInfoId(favorite.getTourInfoId().getTourInfoId())
         .title(favorite.getTourInfoId().getTitle())
         .message("관심 여행지가 성공적으로 저장되었습니다.")

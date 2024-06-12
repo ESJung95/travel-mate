@@ -7,7 +7,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
-public class FavoriteRequestDto {
+public class CreateFavoriteRequestDto {
 
   private Long tourInfoId;
 
