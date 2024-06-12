@@ -3,13 +3,16 @@ package com.eunsun.travel_mate.service;
 import com.eunsun.travel_mate.domain.Favorite;
 import com.eunsun.travel_mate.domain.User;
 import com.eunsun.travel_mate.domain.tourInfo.TourInfo;
-import com.eunsun.travel_mate.dto.request.FavoriteRequestDto;
-import com.eunsun.travel_mate.dto.response.FavoriteResponseDto;
+import com.eunsun.travel_mate.dto.request.CreateFavoriteRequestDto;
+import com.eunsun.travel_mate.dto.response.CheckFavoriteResponseDto;
+import com.eunsun.travel_mate.dto.response.CreateFavoriteResponseDto;
 import com.eunsun.travel_mate.repository.jpa.FavoriteRepository;
 import com.eunsun.travel_mate.repository.jpa.TourInfoRepository;
 import com.eunsun.travel_mate.repository.jpa.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -24,12 +27,13 @@ public class FavoriteService {
   private final UserRepository userRepository;
   private final TourInfoRepository tourInfoRepository;
 
-  public FavoriteResponseDto addFavorite(String userId, FavoriteRequestDto favoriteRequestDto) {
+  // 여행 정보 좋아요 저장하기
+  public CreateFavoriteResponseDto addFavorite(String userId, CreateFavoriteRequestDto createFavoriteRequestDto) {
 
     User user = userRepository.findById(Long.parseLong(userId))
         .orElseThrow(() -> new UsernameNotFoundException("사용자를 찾을 수 없습니다."));
 
-    TourInfo tourInfo = tourInfoRepository.findById(favoriteRequestDto.getTourInfoId())
+    TourInfo tourInfo = tourInfoRepository.findById(createFavoriteRequestDto.getTourInfoId())
         .orElseThrow(() -> new EntityNotFoundException("여행지 정보를 찾을 수 없습니다."));
 
     Optional<Favorite> DuplicateCheckFavorite = favoriteRepository.findByUserAndTourInfoId(user, tourInfo);
@@ -41,9 +45,24 @@ public class FavoriteService {
     Favorite favorite = Favorite.create(user, tourInfo);
     Favorite savedFavorite = favoriteRepository.save(favorite);
 
-    FavoriteResponseDto responseDto = FavoriteResponseDto.from(savedFavorite);
+    CreateFavoriteResponseDto responseDto = CreateFavoriteResponseDto.from(savedFavorite);
     log.info("여행 정보 좋아요 성공");
 
     return responseDto;
+  }
+
+  // 여행 정보 좋아요 한 것들 전체 조회
+  public List<CheckFavoriteResponseDto> getFavoritesByUsername(String userId) {
+    User user = userRepository.findById(Long.parseLong(userId))
+        .orElseThrow(() -> new UsernameNotFoundException("사용자를 찾을 수 없습니다."));
+
+    List<Favorite> favorites = favoriteRepository.findByUser(user);
+
+    List<CheckFavoriteResponseDto> responseDtoList = favorites.stream()
+        .map(CheckFavoriteResponseDto::from)
+        .collect(Collectors.toList());
+
+    log.info("여행 정보 좋아요 전체 조회 성공");
+    return responseDtoList;
   }
 }
