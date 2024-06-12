@@ -65,4 +65,19 @@ public class FavoriteService {
     log.info("여행 정보 좋아요 전체 조회 성공");
     return responseDtoList;
   }
+
+  // 좋아요 한 여행 정보 favoriteId로 삭제
+  public void deleteFavorite(Long favoriteId, String userId) {
+    User user = userRepository.findById(Long.parseLong(userId))
+        .orElseThrow(() -> new UsernameNotFoundException("사용자를 찾을 수 없습니다."));
+
+    Favorite favorite = favoriteRepository.findById(favoriteId)
+        .orElseThrow(() -> new RuntimeException("관심 여행지를 찾을 수 없습니다."));
+
+    if (!favorite.getUser().getUserId().equals(user.getUserId())) {
+      throw new RuntimeException("삭제 권한이 없습니다.");
+    }
+
+    favoriteRepository.delete(favorite);
+  }
 }

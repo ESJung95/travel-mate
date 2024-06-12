@@ -10,7 +10,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -37,7 +39,7 @@ public class FavoriteController {
       return ResponseEntity.ok(favoriteResponse);
 
     } catch (Exception e) {
-      return ResponseEntity.badRequest().body("관심 여행지 추가 실패");
+      return ResponseEntity.badRequest().body("관심 여행지 추가 실패" + e.getMessage());
     }
   }
 
@@ -51,7 +53,23 @@ public class FavoriteController {
       return ResponseEntity.ok().body(allFavorites);
 
     } catch (Exception e) {
-      return ResponseEntity.badRequest().body("관심 여행지 목록 조회 실패");
+      return ResponseEntity.badRequest().body("관심 여행지 목록 조회 실패" + e.getMessage());
+    }
+  }
+
+    // 관심 여행지 삭제
+  @DeleteMapping("/{favoriteId}")
+  public ResponseEntity<?> deleteFavorite(
+      @PathVariable Long favoriteId,
+      @AuthenticationPrincipal UserDetails userDetails) {
+
+    try {
+      String userId = userDetails.getUsername();
+      favoriteService.deleteFavorite(favoriteId, userId);
+      return ResponseEntity.ok().body("관심 여행지 삭제 성공");
+
+    } catch (Exception e) {
+      return ResponseEntity.badRequest().body("관심 여행지 삭제 실패: " + e.getMessage());
     }
   }
 
