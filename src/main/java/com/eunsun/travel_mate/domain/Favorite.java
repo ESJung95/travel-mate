@@ -8,14 +8,16 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 @Entity
 @Getter
-@Setter
 @NoArgsConstructor
+@AllArgsConstructor
+@Builder
 @Table(name = "favorite")
 public class Favorite extends Base {
 
@@ -29,6 +31,15 @@ public class Favorite extends Base {
 
   @ManyToOne
   @JoinColumn(name = "tour_info_id", nullable = false)
-  private TourInfo tourInfo;
+  private TourInfo tourInfoId;
+
+
+  // favorite 생성
+  public static Favorite create(User user, TourInfo tourInfo) {
+    return Favorite.builder()
+        .user(user)
+        .tourInfoId(tourInfo)
+        .build();
+  }
 
 }

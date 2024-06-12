@@ -17,4 +17,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
   // 이름과 생년월일로 User 정보 조회
   Optional<User> findByNameAndBirthdate(String name, LocalDate birthdate);
+
+  // 사용자 이름 조회
+  Optional<User> findById(Long userId);
+
 }
