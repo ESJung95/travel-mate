@@ -2,9 +2,11 @@ package com.eunsun.travel_mate.controller;
 
 import com.eunsun.travel_mate.domain.tourInfo.TourInfoDocument;
 import com.eunsun.travel_mate.service.TourInfoService;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -19,7 +21,7 @@ public class TourInfoController {
 
   private final TourInfoService tourInfoService;
 
-  // 여행 정보 전체 조회
+  // OpenApi 에서 전체 정보 가져오기
   @GetMapping
   public ResponseEntity<?> getTourInfoFromApi()  {
     tourInfoService.getTourInfoFromApi();
@@ -28,15 +30,25 @@ public class TourInfoController {
 
   // 제목으로 검색
   @GetMapping("/search/title")
-  public ResponseEntity<List<TourInfoDocument>> searchByTitle(@RequestParam String keyword) {
-    List<TourInfoDocument> searchResults = tourInfoService.searchByTitle(keyword);
+  public ResponseEntity<Page<TourInfoDocument>> searchByTitle(
+      @RequestParam String keyword,
+      @RequestParam(defaultValue = "0") int page,
+      @RequestParam(defaultValue = "10") int size
+  ) {
+    Pageable pageable = PageRequest.of(page, size);
+    Page<TourInfoDocument> searchResults = tourInfoService.searchByTitle(keyword, pageable);
     return ResponseEntity.ok(searchResults);
   }
 
   // 주소로 검색
   @GetMapping("/search/address")
-  public ResponseEntity<List<TourInfoDocument>> searchByAddress(@RequestParam String addr) {
-    List<TourInfoDocument> searchResults = tourInfoService.searchByAddress(addr);
+  public ResponseEntity<Page<TourInfoDocument>> searchByAddress(
+      @RequestParam String addr,
+      @RequestParam(defaultValue = "0") int page,
+      @RequestParam(defaultValue = "10") int size
+  ) {
+    Pageable pageable = PageRequest.of(page, size);
+    Page<TourInfoDocument> searchResults = tourInfoService.searchByAddress(addr, pageable);
     return ResponseEntity.ok(searchResults);
   }
 

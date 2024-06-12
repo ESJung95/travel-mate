@@ -20,6 +20,8 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
@@ -251,12 +253,12 @@ public class TourInfoService {
   }
 
   // 여행지명을 검색
-  public List<TourInfoDocument> searchByTitle(String keyword) {
-    return tourInfoDocumentRepository.findByTitleContaining(keyword);
+  public Page<TourInfoDocument> searchByTitle(String keyword, Pageable pageable) {
+    return tourInfoDocumentRepository.findByTitleContaining(keyword, pageable);
   }
 
   // 주소로 검색
-  public List<TourInfoDocument> searchByAddress(String addr) {
-    return tourInfoDocumentRepository.findByAddr1ContainingOrAddr2Containing(addr, addr);
+  public Page<TourInfoDocument> searchByAddress(String addr, Pageable pageable) {
+    return tourInfoDocumentRepository.findByAddr1ContainingOrAddr2Containing(addr, addr, pageable);
   }
 }
