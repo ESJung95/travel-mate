@@ -9,16 +9,17 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import java.time.LocalDate;
 import java.time.LocalTime;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 @Entity
 @Getter
-@Setter
 @NoArgsConstructor
+@AllArgsConstructor
+@Builder
 @Table(name = "plan_detail")
 public class PlanDetail extends Base {
 
@@ -33,12 +34,6 @@ public class PlanDetail extends Base {
   @ManyToOne
   @JoinColumn(name = "tour_info_id", nullable = false)
   private TourInfo tourInfo;
-
-  @Column(nullable = false)
-  private LocalDate startDate;
-
-  @Column(nullable = false)
-  private LocalDate endDate;
 
   @Column(nullable = false)
   private LocalTime startTime;
