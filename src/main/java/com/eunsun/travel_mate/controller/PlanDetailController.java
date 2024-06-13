@@ -1,7 +1,9 @@
 package com.eunsun.travel_mate.controller;
 
 import com.eunsun.travel_mate.dto.request.CreatePlanDetailRequestDto;
+import com.eunsun.travel_mate.dto.request.UpdatePlanDetailRequestDto;
 import com.eunsun.travel_mate.dto.response.CreatePlanDetailResponseDto;
+import com.eunsun.travel_mate.dto.response.UpdatePlanDetailResponseDto;
 import com.eunsun.travel_mate.service.PlanDetailService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -39,15 +41,26 @@ public class PlanDetailController {
 
   // 여행 상세 일정 수정
   @PutMapping("/{planDetailId}")
-  public ResponseEntity<?> updatePlanDetail(@PathVariable Long planId, @PathVariable Long planDetailId) {
+  public ResponseEntity<?> updatePlanDetail(
+      @PathVariable Long planId,
+      @PathVariable("planDetailId") Long planDetailId,
+      @AuthenticationPrincipal UserDetails userDetails,
+      @RequestBody UpdatePlanDetailRequestDto updatePlanDetailRequestDto) {
 
-    return ResponseEntity.ok("여행 상세 일정 수정");
+    String userId = userDetails.getUsername();
+    UpdatePlanDetailResponseDto updatePlanDetailResponse = planDetailService.updatePlanDetail(planId, planDetailId, userId, updatePlanDetailRequestDto);
+    return ResponseEntity.ok(updatePlanDetailResponse);
   }
 
   // 여행 상세 일정 삭제
   @DeleteMapping("/{planDetailId}")
-  public ResponseEntity<?> deletePlanDetail(@PathVariable Long planId, @PathVariable Long planDetailId) {
+  public ResponseEntity<?> deletePlanDetail(
+      @PathVariable Long planId,
+      @PathVariable("planDetailId") Long planDetailId,
+      @AuthenticationPrincipal UserDetails userDetails) {
 
-    return ResponseEntity.ok("여행 상세 일정 삭제");
+    String userId = userDetails.getUsername();
+    planDetailService.deletePlanDetail(planDetailId, planId, userId);
+    return ResponseEntity.ok("여행 상세 일정 삭제 성공");
   }
 }
