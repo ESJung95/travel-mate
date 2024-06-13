@@ -54,7 +54,9 @@ public class PlanService {
       throw new IllegalArgumentException("접근 권한이 없습니다.");
     }
 
-    return CheckPlanResponseDto.from(plan);
+    CheckPlanResponseDto responseDto = CheckPlanResponseDto.from(plan);
+    log.info("여행 일정 조회 성공");
+    return responseDto;
   }
 
   // 여행 일정 수정
@@ -69,7 +71,7 @@ public class PlanService {
       throw new IllegalArgumentException("접근 권한이 없습니다.");
     }
 
-    // 일정 정보 업데이트
+    // 일정 정보 업데이트 - 부분 수정 가능
     if (updatePlanRequestDto.getTitle() != null) {
       plan.setTitle(updatePlanRequestDto.getTitle());
     }
@@ -81,8 +83,24 @@ public class PlanService {
     }
 
     UpdatePlanResponseDto responseDto = UpdatePlanResponseDto.from(plan);
-    log.info("일정 정보 수정 성공");
+    log.info("여행 일정 정보 수정 성공");
 
     return responseDto;
+  }
+
+  // 일정표 삭제하기
+  @Transactional
+  public void deletePlan(Long planId, String userId) {
+    Plan plan = planRepository.findById(planId)
+        .orElseThrow(() -> new IllegalArgumentException("일정을 찾을 수 없습니다."));
+
+    // 사용자 정보 확인
+    if (!plan.getUser().getUserId().equals(Long.valueOf(userId))) {
+      throw new IllegalArgumentException("접근 권한이 없습니다.");
+    }
+
+    planRepository.delete(plan);
+    log.info("여행 일정 삭제 성공");
+
   }
 }

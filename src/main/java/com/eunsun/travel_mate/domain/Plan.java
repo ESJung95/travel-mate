@@ -1,5 +1,6 @@
 package com.eunsun.travel_mate.domain;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -36,7 +37,7 @@ public class Plan extends Base {
   @JoinColumn(name = "user_id", nullable = false)
   private User user;
 
-  @OneToMany(mappedBy = "plan", fetch = FetchType.EAGER)
+  @OneToMany(mappedBy = "plan", fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true)
   private List<PlanDetail> planDetails = new ArrayList<>();
 
   @Column(nullable = false)

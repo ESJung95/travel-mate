@@ -65,8 +65,12 @@ public class PlanController {
 
   // 여행 일정 삭제
   @DeleteMapping("{planId}")
-  public ResponseEntity<?> deletePlan(@PathVariable Long planId) {
+  public ResponseEntity<?> deletePlan(
+      @PathVariable Long planId,
+      @AuthenticationPrincipal UserDetails userDetails) {
 
+    String userId = userDetails.getUsername();
+    planService.deletePlan(planId, userId);
     return ResponseEntity.ok("여행 일정 삭제 성공");
   }
 
