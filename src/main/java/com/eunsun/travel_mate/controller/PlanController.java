@@ -1,8 +1,10 @@
 package com.eunsun.travel_mate.controller;
 
 import com.eunsun.travel_mate.dto.request.CreatePlanRequest;
+import com.eunsun.travel_mate.dto.request.UpdatePlanRequestDto;
 import com.eunsun.travel_mate.dto.response.CheckPlanResponseDto;
 import com.eunsun.travel_mate.dto.response.CreatePlanResponseDto;
+import com.eunsun.travel_mate.dto.response.UpdatePlanResponseDto;
 import com.eunsun.travel_mate.service.PlanService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -51,9 +53,14 @@ public class PlanController {
 
   // 여행 일정 수정
   @PutMapping("{planId}")
-  public ResponseEntity<?> updatePlan(@PathVariable Long planId) {
+  public ResponseEntity<?> updatePlan(
+      @PathVariable Long planId,
+      @AuthenticationPrincipal UserDetails userDetails,
+      @RequestBody UpdatePlanRequestDto updatePlanRequestDto) {
 
-    return ResponseEntity.ok("여행 일정 수정 성공");
+    String userId = userDetails.getUsername();
+    UpdatePlanResponseDto updatePlanResponse = planService.updatePlan(planId, userId, updatePlanRequestDto);
+    return ResponseEntity.ok(updatePlanResponse);
   }
 
   // 여행 일정 삭제
