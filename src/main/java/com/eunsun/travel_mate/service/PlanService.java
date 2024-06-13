@@ -9,6 +9,7 @@ import com.eunsun.travel_mate.dto.response.CreatePlanResponseDto;
 import com.eunsun.travel_mate.dto.response.UpdatePlanResponseDto;
 import com.eunsun.travel_mate.repository.jpa.PlanRepository;
 import com.eunsun.travel_mate.repository.jpa.UserRepository;
+import java.time.LocalDate;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -28,6 +29,21 @@ public class PlanService {
   public CreatePlanResponseDto createPlan(CreatePlanRequest createPlanRequest, String userId) {
     User user = userRepository.findById(Long.valueOf(userId))
         .orElseThrow(() -> new UsernameNotFoundException("사용자를 찾을 수 없습니다."));
+
+    String title = createPlanRequest.getTitle();
+    if (title == null || title.isBlank()) {
+      throw new IllegalArgumentException("제목을 입력해주세요.");
+    }
+
+    LocalDate startDate = createPlanRequest.getStartDate();
+    if (startDate == null) {
+      throw new IllegalArgumentException("시작 날짜를 입력해주세요.");
+    }
+
+    LocalDate endDate = createPlanRequest.getEndDate();
+    if (endDate == null) {
+      throw new IllegalArgumentException("종료 날짜를 입력해주세요.");
+    }
 
     Plan plan = Plan.builder()
         .user(user)
