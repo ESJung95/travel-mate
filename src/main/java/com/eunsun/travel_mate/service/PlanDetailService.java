@@ -65,6 +65,12 @@ public class PlanDetailService {
     PlanDetail planDetail = planDetailRepository.findById(planDetailId)
         .orElseThrow(() -> new IllegalArgumentException("상세 일정을 찾을 수 없습니다."));
 
+    if (updatePlanDetailRequestDto.getTourInfoId() != null) {
+      TourInfo newTourInfo = tourInfoRepository.findById(updatePlanDetailRequestDto.getTourInfoId())
+          .orElseThrow(() -> new IllegalArgumentException("여행지 정보를 찾을 수 없습니다."));
+      planDetail.setTourInfo(newTourInfo);
+    }
+
     // 사용자 정보 확인
     if (!plan.getUser().getUserId().equals(Long.valueOf(userId))) {
       throw new IllegalArgumentException("접근 권한이 없습니다.");

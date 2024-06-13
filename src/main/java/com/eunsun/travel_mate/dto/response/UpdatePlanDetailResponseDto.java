@@ -14,6 +14,9 @@ import lombok.NoArgsConstructor;
 @Builder
 public class UpdatePlanDetailResponseDto {
 
+  private Long tourInfoId;
+  private String tourInfoName;
+
   @JsonFormat(pattern = "HH:mm")
   private LocalTime startTime;
 
@@ -24,6 +27,8 @@ public class UpdatePlanDetailResponseDto {
 
   public static UpdatePlanDetailResponseDto from(PlanDetail planDetail) {
     return UpdatePlanDetailResponseDto.builder()
+        .tourInfoId(planDetail.getTourInfo().getTourInfoId())
+        .tourInfoName(planDetail.getTourInfo().getTitle())
         .startTime(planDetail.getStartTime())
         .endTime(planDetail.getEndTime())
         .memo(planDetail.getMemo())

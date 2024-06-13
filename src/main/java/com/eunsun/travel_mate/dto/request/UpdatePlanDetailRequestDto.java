@@ -9,6 +9,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class UpdatePlanDetailRequestDto {
 
+  private Long tourInfoId;
+
   @JsonFormat(pattern = "HH:mm")
   private LocalTime startTime;
 
