@@ -46,8 +46,8 @@ public class PlanDetailService {
         .memo(createPlanDetailRequestDto.getMemo())
         .build();
 
-    planDetailRepository.save(planDetail);
-    CreatePlanDetailResponseDto responseDto = CreatePlanDetailResponseDto.from(planDetail);
+    PlanDetail planDetail1 = planDetailRepository.save(planDetail);
+    CreatePlanDetailResponseDto responseDto = CreatePlanDetailResponseDto.from(planDetail1);
     log.info("여행 상세 일정표 생성 성공");
 
     return responseDto;
