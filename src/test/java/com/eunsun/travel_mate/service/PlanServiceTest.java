@@ -93,15 +93,15 @@ class PlanServiceTest {
   @DisplayName("일정표 수정 테스트")
   void updatePlan() {
     // given
-    User mockUser = new User();
-    mockUser.setUserId(1L);
+    User mockUser = mock(User.class);
+    when(mockUser.getUserId()).thenReturn(1L);
 
-    Plan mockPlan = new Plan();
-    mockPlan.setPlanId(1L);
-    mockPlan.setUser(mockUser);
-    mockPlan.setTitle("제주도 여행");
-    mockPlan.setStartDate(LocalDate.of(2024, 7, 1));
-    mockPlan.setEndDate(LocalDate.of(2024, 7, 10));
+    Plan mockPlan = mock(Plan.class);
+    when(mockPlan.getPlanId()).thenReturn(1L);
+    when(mockPlan.getUser()).thenReturn(mockUser);
+    when(mockPlan.getTitle()).thenReturn("제주도 여행");
+    when(mockPlan.getStartDate()).thenReturn(LocalDate.of(2024, 7, 1));
+    when(mockPlan.getEndDate()).thenReturn(LocalDate.of(2024, 7, 10));
 
     UpdatePlanRequestDto updatePlanRequestDto = new UpdatePlanRequestDto();
     updatePlanRequestDto.setTitle("부산 여행");
@@ -110,6 +110,9 @@ class PlanServiceTest {
 
     // when
     when(planRepository.findById(any(Long.class))).thenReturn(Optional.of(mockPlan));
+    when(mockPlan.getTitle()).thenReturn("부산 여행");
+    when(mockPlan.getStartDate()).thenReturn(LocalDate.of(2024, 7, 5));
+    when(mockPlan.getEndDate()).thenReturn(LocalDate.of(2024, 7, 15));
 
     UpdatePlanResponseDto response = planService.updatePlan(1L, "1", updatePlanRequestDto);
 
@@ -119,8 +122,10 @@ class PlanServiceTest {
     assertEquals(LocalDate.of(2024, 7, 5), response.getStartDate());
     assertEquals(LocalDate.of(2024, 7, 15), response.getEndDate());
     verify(planRepository, times(1)).findById(any(Long.class));
+    verify(mockPlan).setTitle("부산 여행");
+    verify(mockPlan).setStartDate(LocalDate.of(2024, 7, 5));
+    verify(mockPlan).setEndDate(LocalDate.of(2024, 7, 15));
   }
-
 
   @Test
   @DisplayName("일정표 삭제 테스트")
