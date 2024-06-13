@@ -1,6 +1,7 @@
 package com.eunsun.travel_mate.controller;
 
 import com.eunsun.travel_mate.dto.request.CreatePlanRequest;
+import com.eunsun.travel_mate.dto.response.CheckPlanResponseDto;
 import com.eunsun.travel_mate.dto.response.CreatePlanResponseDto;
 import com.eunsun.travel_mate.service.PlanService;
 import lombok.RequiredArgsConstructor;
@@ -43,7 +44,9 @@ public class PlanController {
       @PathVariable Long planId,
       @AuthenticationPrincipal UserDetails userDetails) {
 
-    return ResponseEntity.ok("여행 일정 조회 성공");
+    String userId = userDetails.getUsername();
+    CheckPlanResponseDto planResponseDto = planService.getPlan(planId, userId);
+    return ResponseEntity.ok(planResponseDto);
   }
 
   // 여행 일정 수정

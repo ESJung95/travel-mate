@@ -3,6 +3,7 @@ package com.eunsun.travel_mate.service;
 import com.eunsun.travel_mate.domain.Plan;
 import com.eunsun.travel_mate.domain.User;
 import com.eunsun.travel_mate.dto.request.CreatePlanRequest;
+import com.eunsun.travel_mate.dto.response.CheckPlanResponseDto;
 import com.eunsun.travel_mate.dto.response.CreatePlanResponseDto;
 import com.eunsun.travel_mate.repository.jpa.PlanRepository;
 import com.eunsun.travel_mate.repository.jpa.UserRepository;
@@ -40,4 +41,16 @@ public class PlanService {
   }
 
 
+  // 여행 일정표 조회
+  public CheckPlanResponseDto getPlan(Long planId, String userId) {
+    Plan plan = planRepository.findById(planId)
+        .orElseThrow(() -> new IllegalArgumentException("일정을 찾을 수 없습니다."));
+
+    // 사용자 정보 확인
+    if (!plan.getUser().getUserId().equals(Long.valueOf(userId))) {
+      throw new IllegalArgumentException("접근 권한이 없습니다.");
+    }
+
+    return CheckPlanResponseDto.from(plan);
+  }
 }
