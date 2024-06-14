@@ -21,14 +21,22 @@ import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
+import org.springframework.data.elasticsearch.core.SearchHit;
+import org.springframework.data.elasticsearch.core.SearchHits;
+import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
+import org.springframework.data.elasticsearch.core.query.Criteria;
+import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
 import org.springframework.data.elasticsearch.core.query.IndexQueryBuilder;
+import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 
 @Service
 @Slf4j
@@ -60,7 +68,7 @@ public class TourInfoService {
 
         for (TourInfo newTourInfo : newTourInfoList) {
           TourInfo existingTourInfo = tourInfoRepository.findById(newTourInfo.getTourInfoId())
-              .orElseThrow(() -> new RuntimeException("TourInfo not found"));
+              .orElseThrow(() -> new RuntimeException("여행 정보를 찾을 수 없습니다."));
 
           String existingModifiedTime = existingTourInfo.getModifiedTime();
           String newModifiedTime = newTourInfo.getModifiedTime();
@@ -184,6 +192,19 @@ public class TourInfoService {
 
       for (Object item : itemArray) {
         JSONObject itemObject = (JSONObject) item;
+        String mapx = (String) itemObject.get("mapx");
+        String mapy = (String) itemObject.get("mapy");
+
+        // 위도, 경도 값 정제
+        mapx = cleanCoordinate(mapx);
+        mapy = cleanCoordinate(mapy);
+
+        // 유효성 검사 추가
+        if (mapx.equals("0") || mapy.equals("0")) {
+          log.warn("유효하지 않은 좌표값 (mapx: {}, mapy: {})", mapx, mapy);
+          continue;
+        }
+
         TourInfo tourInfo = TourInfo.builder()
             .areaCode(areaCode)
             .sigunguCode((String) itemObject.get("sigungucode"))
@@ -192,8 +213,8 @@ public class TourInfoService {
             .addr2((String) itemObject.get("addr2"))
             .contentTypeId((String) itemObject.get("contenttypeid"))
             .contentId((String) itemObject.get("contentid"))
-            .mapx((String) itemObject.get("mapx"))
-            .mapy((String) itemObject.get("mapy"))
+            .mapx(mapx)
+            .mapy(mapy)
             .imageUrl1((String) itemObject.get("firstimage"))
             .imageUrl2((String) itemObject.get("firstimage2"))
             .createdTime((String) itemObject.get("createdtime"))
@@ -210,6 +231,27 @@ public class TourInfoService {
 
     return tourInfoList;
   }
+
+  // 좌표 값 정제
+  private String cleanCoordinate(String coordinate) {
+    if (coordinate == null || coordinate.isEmpty()) {
+      return "0";
+    }
+
+    String cleanedCoordinate = coordinate.replaceAll("[^0-9.-]", "");
+
+    if (cleanedCoordinate.isEmpty()) {
+      return "0";
+    }
+
+    // 유효성 검사 추가
+    if (!cleanedCoordinate.matches("-?\\d+(\\.\\d+)?")) {
+      return "0";
+    }
+
+    return cleanedCoordinate;
+  }
+
 
   // 전체 데이터 개수 가져오기
   public int getTotalCount(String areaCode) {
@@ -261,4 +303,22 @@ public class TourInfoService {
   public Page<TourInfoDocument> searchByAddress(String addr, Pageable pageable) {
     return tourInfoDocumentRepository.findByAddr1ContainingOrAddr2Containing(addr, addr, pageable);
   }
+
+  // 위치 기반으로 검색
+  public Page<TourInfoDocument> searchByLocation(double lat, double lon, double distance, Pageable pageable) {
+    Criteria criteria = new Criteria("location")
+        .within(new GeoPoint(lat, lon), distance + "km");
+
+    Query query = new CriteriaQuery(criteria).setPageable(pageable);
+
+    SearchHits<TourInfoDocument> searchHits = elasticsearchOperations.search(query, TourInfoDocument.class);
+
+    List<TourInfoDocument> tourInfoDocuments = searchHits.getSearchHits().stream()
+        .map(SearchHit::getContent)
+        .collect(Collectors.toList());
+
+    return new PageImpl<>(tourInfoDocuments, pageable, searchHits.getTotalHits());
+  }
+
+
 }

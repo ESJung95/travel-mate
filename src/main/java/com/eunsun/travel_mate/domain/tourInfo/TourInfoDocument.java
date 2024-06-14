@@ -11,6 +11,8 @@ import org.springframework.data.elasticsearch.annotations.DateFormat;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
+import org.springframework.data.elasticsearch.annotations.GeoPointField;
+import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 
 @Document(indexName = "tour_info")
 @Getter
@@ -44,11 +46,8 @@ public class TourInfoDocument {
   @Field(type = FieldType.Keyword)
   private String contentId;
 
-  @Field(type = FieldType.Double)
-  private Double mapx;
-
-  @Field(type = FieldType.Double)
-  private Double mapy;
+  @GeoPointField
+  private GeoPoint location;
 
   @Field(type = FieldType.Text)
   private String imageUrl1;
@@ -68,6 +67,7 @@ public class TourInfoDocument {
   @Field(type = FieldType.Date, format = DateFormat.date_hour_minute_second)
   private LocalDateTime updatedAt;
 
+
   public static TourInfoDocument from(TourInfo tourInfo) {
     return TourInfoDocument.builder()
         .id(tourInfo.getTourInfoId())
@@ -78,12 +78,12 @@ public class TourInfoDocument {
         .addr2(tourInfo.getAddr2())
         .contentTypeId(tourInfo.getContentTypeId())
         .contentId(tourInfo.getContentId())
-        .mapx(Double.parseDouble(tourInfo.getMapx()))
-        .mapy(Double.parseDouble(tourInfo.getMapy()))
+        .location(new GeoPoint(Double.parseDouble(tourInfo.getMapy()), Double.parseDouble(tourInfo.getMapx())))
         .imageUrl1(tourInfo.getImageUrl1())
         .imageUrl2(tourInfo.getImageUrl2())
         .createdTime(tourInfo.getCreatedTime())
         .modifiedTime(tourInfo.getModifiedTime())
         .build();
   }
+
 }

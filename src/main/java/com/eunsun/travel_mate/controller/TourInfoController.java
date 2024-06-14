@@ -23,7 +23,7 @@ public class TourInfoController {
 
   // OpenApi 에서 전체 정보 가져오기
   @GetMapping
-  public ResponseEntity<?> getTourInfoFromApi()  {
+  public ResponseEntity<?> getTourInfoFromApi() {
     tourInfoService.getTourInfoFromApi();
     return ResponseEntity.ok("성공");
   }
@@ -50,6 +50,22 @@ public class TourInfoController {
     Pageable pageable = PageRequest.of(page, size);
     Page<TourInfoDocument> searchResults = tourInfoService.searchByAddress(addr, pageable);
     return ResponseEntity.ok(searchResults);
+  }
+
+
+  // 내 위치 기반으로 가까운 여행지 검색
+  @GetMapping("/search/mylocation")
+  public ResponseEntity<Page<TourInfoDocument>> searchByMyLocation(
+      @RequestParam double lat,
+      @RequestParam double lon,
+      @RequestParam(defaultValue = "5") double distance,
+      @RequestParam(defaultValue = "0") int page,
+      @RequestParam(defaultValue = "10") int size) {
+
+    Pageable pageable = PageRequest.of(page, size);
+    Page<TourInfoDocument> searchResults = tourInfoService.searchByLocation(lat, lon, distance, pageable);
+    return ResponseEntity.ok(searchResults);
+
   }
 
 }
