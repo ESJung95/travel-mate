@@ -10,6 +10,8 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -45,6 +47,15 @@ public class TourInfoService {
 
   @Value("${tour.openapi.key}")
   private String apiKey;
+
+  @Value("${naver.cloud.geocoding.url}")
+  private String geocodingUrl;
+
+  @Value("${naver.cloud.geocoding.client-id}")
+  private String clientId;
+
+  @Value("${naver.cloud.geocoding.client-secret}")
+  private String clientSecret;
 
   private final AreaCodeRepository areaCodeRepository;
   private final TourInfoRepository tourInfoRepository;
@@ -320,5 +331,50 @@ public class TourInfoService {
     return new PageImpl<>(tourInfoDocuments, pageable, searchHits.getTotalHits());
   }
 
+  // 주소를 좌표로 변환
+  public GeoPoint convertToLocation(String address) {
+    try {
+      // Geocoding API URL 생성
+      String apiUrl = geocodingUrl + "?query=" + URLEncoder.encode(address, StandardCharsets.UTF_8);
+
+      URL url = new URL(apiUrl);
+      HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+      connection.setRequestMethod("GET");
+
+      // API 인증을 위한 헤더 설정
+      connection.setRequestProperty("X-NCP-APIGW-API-KEY-ID", clientId);
+      connection.setRequestProperty("X-NCP-APIGW-API-KEY", clientSecret);
+
+      // 응답 코드 확인
+      int responseCode = connection.getResponseCode();
+      if (responseCode == HttpURLConnection.HTTP_OK) {
+
+        BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+        String line;
+        StringBuilder response = new StringBuilder();
+        while ((line = reader.readLine()) != null) {
+          response.append(line);
+        }
+        reader.close();
+
+        // JSON 파싱
+        JSONParser parser = new JSONParser();
+        JSONObject jsonObject = (JSONObject) parser.parse(response.toString());
+        JSONArray addresses = (JSONArray) jsonObject.get("addresses");
+
+        if (!addresses.isEmpty()) {
+          JSONObject result = (JSONObject) addresses.get(0);
+          double lat = Double.parseDouble(result.get("y").toString());
+          double lon = Double.parseDouble(result.get("x").toString());
+
+          return new GeoPoint(lat, lon);
+        }
+      }
+    } catch (Exception e) {
+      log.error("주소를 좌표로 변환 실패", e);
+    }
+
+    return null;
+  }
 
 }

@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -63,9 +64,33 @@ public class TourInfoController {
       @RequestParam(defaultValue = "10") int size) {
 
     Pageable pageable = PageRequest.of(page, size);
-    Page<TourInfoDocument> searchResults = tourInfoService.searchByLocation(lat, lon, distance, pageable);
+    Page<TourInfoDocument> searchResults = tourInfoService.searchByLocation(lat, lon, distance,
+        pageable);
     return ResponseEntity.ok(searchResults);
 
   }
 
+  // 원하는 위치 기반으로 가까운 여행지 검색
+  @GetMapping("/search/location")
+  public ResponseEntity<?> searchByLocation(
+      @RequestParam String address,
+      @RequestParam(defaultValue = "5") double distance,
+      @RequestParam(defaultValue = "0") int page,
+      @RequestParam(defaultValue = "10") int size
+  ) {
+
+    // 주소를 좌표로 변환
+    GeoPoint location = tourInfoService.convertToLocation(address);
+
+    if (location == null) {
+      return ResponseEntity.badRequest().body("주소를 좌표로 변환할 수 없습니다.");
+    }
+
+    Pageable pageable = PageRequest.of(page, size);
+    Page<TourInfoDocument> searchResults = tourInfoService.searchByLocation(
+        location.getLat(), location.getLon(), distance, pageable);
+
+    return ResponseEntity.ok(searchResults);
+
+  }
 }
