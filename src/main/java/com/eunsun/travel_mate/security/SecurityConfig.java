@@ -50,6 +50,7 @@ public class SecurityConfig {
             .requestMatchers("/user/signup", "/user/check-email", "/user/verify-email", "/user/send-verification-code").permitAll()
             .requestMatchers("/user/login", "/user/logout", "/user/find/email", "/user/find/password").permitAll()
             .requestMatchers("/area-code", "/tour").permitAll()
+            .requestMatchers("/swagger-ui/**", "/swagger-resources/**", "/v3/api-docs/**").permitAll()
 
             // 나머지는 인증 필요
             .anyRequest().authenticated())
