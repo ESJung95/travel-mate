@@ -34,10 +34,10 @@ public class TourInfoDocument {
   @Field(type = FieldType.Text)
   private String title;
 
-  @Field(type = FieldType.Text)
+  @Field(type = FieldType.Text, analyzer = "ngram_analyzer")
   private String addr1;
 
-  @Field(type = FieldType.Text)
+  @Field(type = FieldType.Text, analyzer = "ngram_analyzer")
   private String addr2;
 
   @Field(type = FieldType.Keyword)
