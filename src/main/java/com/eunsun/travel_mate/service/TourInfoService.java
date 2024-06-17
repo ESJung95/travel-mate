@@ -362,13 +362,17 @@ public class TourInfoService {
         JSONObject jsonObject = (JSONObject) parser.parse(response.toString());
         JSONArray addresses = (JSONArray) jsonObject.get("addresses");
 
-        if (!addresses.isEmpty()) {
+        if (addresses != null && !addresses.isEmpty()) {
           JSONObject result = (JSONObject) addresses.get(0);
           double lat = Double.parseDouble(result.get("y").toString());
           double lon = Double.parseDouble(result.get("x").toString());
 
           return new GeoPoint(lat, lon);
+        } else {
+          log.warn("주소 좌표 변환 실패: 응답에 주소 정보가 없습니다. 응답: {}", response);
         }
+      } else {
+        log.error("주소 좌표 변환 실패: API 응답 코드 {}", responseCode);
       }
     } catch (Exception e) {
       log.error("주소를 좌표로 변환 실패", e);
