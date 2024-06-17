@@ -1,6 +1,7 @@
 package com.eunsun.travel_mate.domain.tourInfo;
 
 import com.eunsun.travel_mate.domain.AreaCode;
+import com.eunsun.travel_mate.domain.Base;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -9,14 +10,11 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
 
 @Entity
 @Getter
@@ -25,7 +23,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 @AllArgsConstructor
 @Builder
 @Table(name = "tour_info")
-public class TourInfo {
+public class TourInfo extends Base {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -68,13 +66,6 @@ public class TourInfo {
   @Column(nullable = false)
   private String modifiedTime;
 
-  @CreationTimestamp
-  @Column(updatable = false)
-  private LocalDateTime createdAt;
-
-  @UpdateTimestamp
-  private LocalDateTime updatedAt;
-
   public TourInfo update(TourInfo newTourInfo) {
     return TourInfo.builder()
         .tourInfoId(this.tourInfoId)
@@ -91,8 +82,6 @@ public class TourInfo {
         .imageUrl2(newTourInfo.getImageUrl2())
         .createdTime(this.createdTime)
         .modifiedTime(newTourInfo.getModifiedTime())
-        .createdAt(this.createdAt)
-        .updatedAt(this.updatedAt)
         .build();
   }
 }

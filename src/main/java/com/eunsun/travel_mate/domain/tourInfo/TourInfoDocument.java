@@ -50,12 +50,6 @@ public class TourInfoDocument {
   private GeoPoint location;
 
   @Field(type = FieldType.Text)
-  private String imageUrl1;
-
-  @Field(type = FieldType.Text)
-  private String imageUrl2;
-
-  @Field(type = FieldType.Text)
   private String createdTime;
 
   @Field(type = FieldType.Text)
@@ -66,7 +60,6 @@ public class TourInfoDocument {
 
   @Field(type = FieldType.Date, format = DateFormat.date_hour_minute_second)
   private LocalDateTime updatedAt;
-
 
   public static TourInfoDocument from(TourInfo tourInfo) {
     return TourInfoDocument.builder()
@@ -79,10 +72,10 @@ public class TourInfoDocument {
         .contentTypeId(tourInfo.getContentTypeId())
         .contentId(tourInfo.getContentId())
         .location(new GeoPoint(Double.parseDouble(tourInfo.getMapy()), Double.parseDouble(tourInfo.getMapx())))
-        .imageUrl1(tourInfo.getImageUrl1())
-        .imageUrl2(tourInfo.getImageUrl2())
         .createdTime(tourInfo.getCreatedTime())
         .modifiedTime(tourInfo.getModifiedTime())
+        .createdAt(tourInfo.getCreatedAt())
+        .updatedAt(tourInfo.getUpdatedAt())
         .build();
   }
 
