@@ -13,7 +13,8 @@ import com.eunsun.travel_mate.dto.response.LoginResponseDto;
 import com.eunsun.travel_mate.dto.response.SignupResponseDto;
 import com.eunsun.travel_mate.dto.response.UserNameUpdateResponseDto;
 import com.eunsun.travel_mate.dto.response.UserResponseDto;
-import com.eunsun.travel_mate.exception.UserNotFoundException;
+import com.eunsun.travel_mate.exception.ErrorResponse;
+import com.eunsun.travel_mate.exception.implement.UserNotFoundException;
 import com.eunsun.travel_mate.security.JwtTokenProvider;
 import com.eunsun.travel_mate.service.TokenBlacklistService;
 import com.eunsun.travel_mate.service.UserService;
@@ -21,6 +22,7 @@ import com.eunsun.travel_mate.util.SessionUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -63,7 +65,7 @@ public class UserController {
 
   @ApiResponses(value = {
       @ApiResponse(responseCode = "200", description = "사용 가능한 이메일"),
-      @ApiResponse(responseCode = "400", description = "이미 사용 중인 이메일")
+      @ApiResponse(responseCode = "400", description = "이미 사용 중인 이메일", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
   })
   public ResponseEntity<?> checkEmailDuplicated(
       @io.swagger.v3.oas.annotations.parameters.RequestBody(
@@ -79,13 +81,8 @@ public class UserController {
       ) @RequestBody SignupRequestDto signupRequestDto) {
     log.info("[{}] 사용자의 이메일 중복 확인 요청", signupRequestDto.getEmail());
 
-    boolean isDuplicated = userService.checkEmailDuplicated(signupRequestDto.getEmail());
-
-    if (isDuplicated) {
-      return ResponseEntity.badRequest().body("이미 사용 중인 이메일입니다.");
-    } else {
-      return ResponseEntity.ok("사용 가능한 이메일입니다.");
-    }
+    userService.checkEmailDuplicated(signupRequestDto.getEmail());
+    return ResponseEntity.ok("이메일 중복 확인 완료, 사용 가능한 이메일입니다.");
   }
 
   // 메일로 인증 코드 전송
@@ -96,7 +93,8 @@ public class UserController {
 
   @ApiResponses(value = {
       @ApiResponse(responseCode = "200", description = "인증 코드 전송 완료"),
-      @ApiResponse(responseCode = "500", description = "인증 코드 전송 실패")
+      @ApiResponse(responseCode = "400", description = "잘못된 요청", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+      @ApiResponse(responseCode = "500", description = "인증 코드 전송 실패", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
   })
 
   public ResponseEntity<?> sendVerificationCode(
@@ -114,15 +112,12 @@ public class UserController {
       HttpServletRequest request) {
     log.info("[{}] 사용자의 메일로 인증 코드 전송 요청", signupRequestDto.getEmail());
 
-    String verificationCode = userService.generateVerificationCode();
-    boolean isSendEmail = userService.sendVerificationCode(signupRequestDto.getEmail(), verificationCode);
 
-    if (isSendEmail) {
-      SessionUtil.setVerificationCode(request, verificationCode); // 세션에 저장
-      return ResponseEntity.ok("인증 코드 전송 완료");
-    } else {
-      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("인증 코드 전송 실패");
-    }
+    String verificationCode = userService.generateVerificationCode();
+    userService.sendVerificationCode(signupRequestDto.getEmail(), verificationCode);
+    SessionUtil.setVerificationCode(request, verificationCode); // 세션에 저장
+
+    return ResponseEntity.ok("이메일로 인증 코드 전송 완료");
   }
 
 
@@ -134,7 +129,7 @@ public class UserController {
 
   @ApiResponses(value = {
       @ApiResponse(responseCode = "200", description = "이메일 인증 성공"),
-      @ApiResponse(responseCode = "400", description = "유효하지 않은 인증코드")
+      @ApiResponse(responseCode = "400", description = "유효하지 않은 인증코드", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
   })
   public ResponseEntity<?> verifyEmail(
       @io.swagger.v3.oas.annotations.parameters.RequestBody(
@@ -153,15 +148,10 @@ public class UserController {
     String inputVerificationCode = emailVerificationRequestDto.getVerificationCode();
     String storedVerificationCode = SessionUtil.getVerificationCode(request);
 
-    boolean isVerifyCode = userService.verifyEmailCode(inputVerificationCode, storedVerificationCode);
+    userService.verifyEmailCode(inputVerificationCode, storedVerificationCode);
+    SessionUtil.setEmailVerified(request, true);
 
-    if (isVerifyCode) {
-      SessionUtil.setEmailVerified(request, true);
-      return ResponseEntity.ok("이메일 인증 성공");
-
-    } else {
-      return ResponseEntity.badRequest().body("유효하지 않은 인증코드");
-    }
+    return ResponseEntity.ok("이메일 본인 인증 성공");
   }
 
   // 회원 가입
@@ -300,15 +290,10 @@ public class UserController {
       @ApiResponse(responseCode = "200", description = "회원 정보 조회 성공"),
       @ApiResponse(responseCode = "404", description = "사용자를 찾을 수 없음")
   })
-  public ResponseEntity<?> getUser(@PathVariable Long userId) {
+  public ResponseEntity<UserResponseDto> getUser(@PathVariable Long userId) {
+    UserResponseDto userResponseDto = userService.getUserById(userId);
 
-    try {
-      UserResponseDto userResponseDto = userService.getUserById(userId);
-      return ResponseEntity.ok(userResponseDto);
-    } catch (UserNotFoundException e) {
-      log.info("사용자 정보 조회 실패 : {}", userId, e);
-      return ResponseEntity.status(HttpStatus.NOT_FOUND).body("사용자를 찾을 수 없습니다.");
-    }
+    return ResponseEntity.ok(userResponseDto);
   }
 
   // 회원 정보 수정 - 이름

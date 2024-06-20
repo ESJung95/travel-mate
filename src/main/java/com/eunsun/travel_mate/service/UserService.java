@@ -13,7 +13,12 @@ import com.eunsun.travel_mate.dto.response.SignupResponseDto;
 import com.eunsun.travel_mate.dto.response.TokenDetailDto;
 import com.eunsun.travel_mate.dto.response.UserNameUpdateResponseDto;
 import com.eunsun.travel_mate.dto.response.UserResponseDto;
-import com.eunsun.travel_mate.exception.UserNotFoundException;
+import com.eunsun.travel_mate.enums.ErrorCode;
+import com.eunsun.travel_mate.exception.implement.EmailDuplicateException;
+import com.eunsun.travel_mate.exception.implement.EmailNotFoundException;
+import com.eunsun.travel_mate.exception.implement.InvalidVerificationCodeException;
+import com.eunsun.travel_mate.exception.implement.UserNotFoundException;
+import com.eunsun.travel_mate.exception.implement.VerificationCodeSendFailedException;
 import com.eunsun.travel_mate.repository.jpa.UserRepository;
 import com.eunsun.travel_mate.security.JwtTokenProvider;
 import com.eunsun.travel_mate.util.RandomUtil;
@@ -22,7 +27,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.mail.MailSendException;
 import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -38,8 +42,10 @@ public class UserService {
   private final JwtTokenProvider jwtTokenProvider;
 
   // 이메일 중복 확인
-  public boolean checkEmailDuplicated(String email) {
-    return userRepository.existsByEmail(email);
+  public void checkEmailDuplicated(String email) {
+    if (userRepository.existsByEmail(email)) {
+      throw new EmailDuplicateException(ErrorCode.EMAIL_DUPLICATION);
+    }
   }
 
   // 인증 코드 생성 : 이메일로 전송 될 인증 코드
@@ -48,24 +54,22 @@ public class UserService {
   }
 
   // 인증 코드 전송
-  public boolean sendVerificationCode(String email, String verificationCode) {
+  public void sendVerificationCode(String email, String verificationCode) {
     try {
       mailComponent.sendVerificationEmail(email, verificationCode);
-      return true;
-
     } catch (Exception e) {
 
       log.error("인증 코드 메일 전송 실패: {}", e.getMessage());
-      return false;
+      throw new VerificationCodeSendFailedException(ErrorCode.EMAIL_SEND_FAILURE);
     }
   }
 
   // 이메일 인증 코드 확인
-  public boolean verifyEmailCode(
+  public void verifyEmailCode(
       String verificationCode, String storedVerificationCode) {
-
-    return storedVerificationCode != null
-        && storedVerificationCode.equals(verificationCode);
+    if (storedVerificationCode == null || !storedVerificationCode.equals(verificationCode)) {
+      throw new InvalidVerificationCodeException(ErrorCode.INVALID_VERIFICATION_CODE);
+    }
   }
 
   // 회원 정보 저장
@@ -105,7 +109,7 @@ public class UserService {
   // 이메일로 User 조회
   private User findUserByEmail(String email) {
     User user =  userRepository.findByEmail(email)
-        .orElseThrow(() -> new UsernameNotFoundException("가입된 사용자가 없습니다. : " + email));
+        .orElseThrow(() -> new EmailNotFoundException(ErrorCode.EMAIL_NOT_FOUND));
 
     log.info("이메일로 User 정보 조회 성공");
     return user;
@@ -122,7 +126,7 @@ public class UserService {
   // 사용자 정보 조회
   public UserResponseDto getUserById(Long userId) {
     User user = userRepository.findById(userId)
-        .orElseThrow(() -> new UserNotFoundException("사용자를 찾을 수 없습니다 : userId = " + userId));
+        .orElseThrow(() -> new UserNotFoundException(ErrorCode.USER_NOT_FOUND));
 
     UserResponseDto userResponseDto = UserResponseDto.createUserResponse(user.getEmail(), user.getName(), user.getBirthdate());
     log.info("사용자 ID 로 사용자 정보 조회 성공 : userId = {}", userId);
@@ -134,7 +138,8 @@ public class UserService {
   // 사용자 정보 수정 - 이름 변경
   public UserNameUpdateResponseDto updateUserName(Long userId, UserNameUpdateRequestDto userNameUpdateRequestDto) {
     User user = userRepository.findById(userId)
-        .orElseThrow(() -> new UserNotFoundException("사용자를 찾을 수 없습니다 : userId = " + userId));
+        .orElseThrow(() -> new UserNotFoundException(ErrorCode.USER_NOT_FOUND));
+
 
     String oldName = user.getName();
     String newName = userNameUpdateRequestDto.getName();
@@ -149,7 +154,7 @@ public class UserService {
   // 사용자 정보 수정 -  비밀번호 변경
   public void updateUserPassword(Long userId, UserPasswordUpdateRequestDto userPasswordUpdateRequestDto) {
     User user = userRepository.findById(userId)
-        .orElseThrow(() -> new UserNotFoundException("사용자를 찾을 수 없습니다 : userId = " + userId));
+        .orElseThrow(() -> new UserNotFoundException(ErrorCode.USER_NOT_FOUND));
 
     if (!passwordEncoder.matches(userPasswordUpdateRequestDto.getCurrentPassword(), user.getPassword())) {
       throw new BadCredentialsException("비밀번호가 일치하지 않습니다.");
@@ -170,7 +175,7 @@ public class UserService {
   // 사용자 정보 삭제
   public void deleteUser(Long userId) {
     User user = userRepository.findById(userId)
-        .orElseThrow(() -> new UserNotFoundException("사용자를 찾을 수 없습니다 : userId = " + userId));
+        .orElseThrow(() -> new UserNotFoundException(ErrorCode.USER_NOT_FOUND));
 
     userRepository.delete(user);
     log.info("사용자 정보 삭제 완료 : userId = {}", userId);
@@ -184,7 +189,7 @@ public class UserService {
       User user = optionalUser.get();
       return FindUserEmailResponseDto.createFindUserEmailResponse(user.getName(), user.getEmail());
     } else {
-      throw new UserNotFoundException("이메일을 찾을 수 없습니다.");
+      throw new UserNotFoundException(ErrorCode.USER_NOT_FOUND);
     }
   }
 
@@ -194,7 +199,7 @@ public class UserService {
 
     // 이메일로 사용자 조회
     User user = userRepository.findByEmail(findPasswordRequestDto.getEmail())
-        .orElseThrow(() -> new UserNotFoundException("사용자를 찾을 수 없습니다."));
+        .orElseThrow(() -> new UserNotFoundException(ErrorCode.USER_NOT_FOUND));
 
     try {
       // 임시 비밀번호 생성

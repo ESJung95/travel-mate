@@ -1,8 +1,8 @@
 package com.eunsun.travel_mate.service;
 
 import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -30,7 +30,12 @@ import com.eunsun.travel_mate.dto.response.SignupResponseDto;
 import com.eunsun.travel_mate.dto.response.TokenDetailDto;
 import com.eunsun.travel_mate.dto.response.UserNameUpdateResponseDto;
 import com.eunsun.travel_mate.dto.response.UserResponseDto;
-import com.eunsun.travel_mate.exception.UserNotFoundException;
+import com.eunsun.travel_mate.enums.ErrorCode;
+import com.eunsun.travel_mate.exception.implement.EmailDuplicateException;
+import com.eunsun.travel_mate.exception.implement.EmailNotFoundException;
+import com.eunsun.travel_mate.exception.implement.InvalidVerificationCodeException;
+import com.eunsun.travel_mate.exception.implement.UserNotFoundException;
+import com.eunsun.travel_mate.exception.implement.VerificationCodeSendFailedException;
 import com.eunsun.travel_mate.repository.jpa.UserRepository;
 import com.eunsun.travel_mate.security.JwtTokenProvider;
 import java.time.LocalDate;
@@ -45,7 +50,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mail.MailSendException;
 import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 @ExtendWith(MockitoExtension.class)
@@ -88,11 +92,12 @@ class UserServiceTest {
     when(userRepository.existsByEmail(email)).thenReturn(true);
 
     // when
-    boolean result = userService.checkEmailDuplicated(email);
+    EmailDuplicateException exception = assertThrows(EmailDuplicateException.class, () -> userService.checkEmailDuplicated(email));
 
     // then
-    assertTrue(result);
+    assertEquals(ErrorCode.EMAIL_DUPLICATION, exception.getErrorCode());
     verify(userRepository, times(1)).existsByEmail(email);
+
   }
 
   @Test
@@ -102,10 +107,9 @@ class UserServiceTest {
     when(userRepository.existsByEmail(email)).thenReturn(false);
 
     // when
-    boolean result = userService.checkEmailDuplicated(email);
+    assertDoesNotThrow(() -> userService.checkEmailDuplicated(email));
 
     // then
-    assertFalse(result);
     verify(userRepository, times(1)).existsByEmail(email);
   }
 
@@ -137,10 +141,9 @@ class UserServiceTest {
     String verificationCode = "123456";
 
     // when
-    boolean result = userService.sendVerificationCode(email, verificationCode);
+    userService.sendVerificationCode(email, verificationCode);
 
     // then
-    assertTrue(result);
     verify(mailComponent, times(1)).sendVerificationEmail(eq(email), eq(verificationCode));
   }
 
@@ -151,13 +154,12 @@ class UserServiceTest {
     // given
     String email = "test@example.com";
     String verificationCode = "123456";
-    doThrow(new RuntimeException("메일 전송 오류")).when(mailComponent).sendVerificationEmail(email, verificationCode);
 
     // when
-    boolean result = userService.sendVerificationCode(email, verificationCode);
+    doThrow(new RuntimeException("메일 전송 오류")).when(mailComponent).sendVerificationEmail(email, verificationCode);
 
     // then
-    assertFalse(result);
+    assertThrows(VerificationCodeSendFailedException.class, () -> userService.sendVerificationCode(email, verificationCode));
     verify(mailComponent, times(1)).sendVerificationEmail(eq(email), eq(verificationCode));
   }
 
@@ -169,10 +171,10 @@ class UserServiceTest {
     String userInputVerificationCode = "abc123";
 
     // when
-    boolean result = userService.verifyEmailCode(userInputVerificationCode, storedVerificationCode);
+    assertDoesNotThrow(() -> userService.verifyEmailCode(userInputVerificationCode, storedVerificationCode));
 
     // then
-    assertTrue(result);
+
   }
 
   @Test
@@ -184,10 +186,10 @@ class UserServiceTest {
     String userInputVerificationCode = "invalid";
 
     // when
-    boolean result = userService.verifyEmailCode(userInputVerificationCode, storedVerificationCode);
+    InvalidVerificationCodeException exception = assertThrows(InvalidVerificationCodeException.class, () -> userService.verifyEmailCode(userInputVerificationCode, storedVerificationCode));
 
     // then
-    assertFalse(result);
+    assertEquals(ErrorCode.INVALID_VERIFICATION_CODE, exception.getErrorCode());
   }
   @Test
   @DisplayName("회원 가입 정보 저장 성공")
@@ -246,17 +248,17 @@ class UserServiceTest {
   }
 
   @Test
-  @DisplayName("로그인 실패 = 사용자를 찾을 수 없음")
+  @DisplayName("로그인 실패 - 사용자를 찾을 수 없음")
   void loginUser_userNotFound() {
     // given
     when(userRepository.findByEmail(email)).thenReturn(Optional.empty());
 
     // when
-    UsernameNotFoundException exception = assertThrows(UsernameNotFoundException.class, () -> userService.loginUser(email, password));
+    EmailNotFoundException exception = assertThrows(EmailNotFoundException.class, () -> userService.loginUser(email, password));
 
     // then
     assertNotNull(exception);
-    assertEquals("가입된 사용자가 없습니다. : " + email, exception.getMessage());
+    assertEquals(ErrorCode.EMAIL_NOT_FOUND, exception.getErrorCode());
     verify(userRepository, times(1)).findByEmail(email);
     verify(passwordEncoder, never()).matches(anyString(), anyString());
     verify(jwtTokenProvider, never()).generateToken(anyLong(), any());
@@ -322,7 +324,7 @@ class UserServiceTest {
 
     // then
     assertNotNull(exception);
-    assertEquals("사용자를 찾을 수 없습니다 : userId = " + userId, exception.getMessage());
+    assertEquals(ErrorCode.USER_NOT_FOUND, exception.getErrorCode());
     verify(userRepository, times(1)).findById(userId);
   }
 
@@ -372,7 +374,7 @@ class UserServiceTest {
 
     // then
     assertNotNull(exception);
-    assertEquals("사용자를 찾을 수 없습니다 : userId = " + userId, exception.getMessage());
+    assertEquals(ErrorCode.USER_NOT_FOUND, exception.getErrorCode());
     verify(userRepository, times(1)).findById(userId);
     verify(userRepository, never()).save(any(User.class));
   }
@@ -429,7 +431,7 @@ class UserServiceTest {
 
     // then
     assertNotNull(exception);
-    assertEquals("사용자를 찾을 수 없습니다 : userId = " + userId, exception.getMessage());
+    assertEquals(ErrorCode.USER_NOT_FOUND, exception.getErrorCode());
     verify(userRepository, times(1)).findById(userId);
     verify(passwordEncoder, never()).matches(anyString(), anyString());
     verify(passwordEncoder, never()).encode(anyString());
@@ -575,7 +577,7 @@ class UserServiceTest {
 
     // then
     assertNotNull(exception);
-    assertEquals("사용자를 찾을 수 없습니다 : userId = " + userId, exception.getMessage());
+    assertEquals(ErrorCode.USER_NOT_FOUND, exception.getErrorCode());
     verify(userRepository, times(1)).findById(userId);
     verify(userRepository, never()).delete(any(User.class));
   }
@@ -629,7 +631,7 @@ class UserServiceTest {
 
     // then
     assertNotNull(exception);
-    assertEquals("이메일을 찾을 수 없습니다.", exception.getMessage());
+    assertEquals(ErrorCode.USER_NOT_FOUND, exception.getErrorCode());
     verify(userRepository, times(1)).findByNameAndBirthdate(name, birthdate);
   }
 
@@ -714,6 +716,5 @@ class UserServiceTest {
     verify(userRepository, times(1)).save(any(User.class));
     verify(mailComponent, times(1)).sendTemporaryPasswordEmail(eq(email), anyString());
   }
-
 
 }
