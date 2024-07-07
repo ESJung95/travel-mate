@@ -38,6 +38,7 @@ public class Plan extends Base {
   private User user;
 
   @OneToMany(mappedBy = "plan", fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true)
+  @Builder.Default
   private List<PlanDetail> planDetails = new ArrayList<>();
 
   @Column(nullable = false)
